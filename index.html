@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OPUS.VOID — floating structures of sound</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Homemade+Apple&family=Noto+Music&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#161616;
+    --mute:rgba(22,22,22,.46);
+    --hair:rgba(22,22,22,.16);
+    --serif:"Cormorant Garamond","Times New Roman",serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#fff;color:var(--ink);overflow:hidden;font-family:var(--serif);-webkit-font-smoothing:antialiased}
+  #stage{position:fixed;inset:0}
+  #stage canvas{display:block;cursor:crosshair;touch-action:none}
+  #stage.grab canvas{cursor:grabbing}
+  /* the faintest paper */
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:2;opacity:.06;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.6 0 0 0 -0.95'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+
+  .ui{transition:opacity 1.6s ease}
+  html,body,.veil{transition:background-color 1.4s ease,color 1.4s ease}
+  .grain{transition:opacity 1.4s}
+  body.void{background:#060606;color:#eeece6;--ink:#eeece6;--mute:rgba(238,236,230,.42);--hair:rgba(238,236,230,.18)}
+  body.void .grain{opacity:0}
+  body.void #tip{color:#eeece6}
+  .word,.toggle,h1,.sub,.hint,.hint b,.panel,#play{transition:color 1.4s, opacity 1.6s}
+  body.idle .ui{opacity:.14}
+  body.focused header,body.focused .hint{opacity:0 !important}
+
+  header{position:fixed;left:52px;top:42px;pointer-events:none;user-select:none;z-index:3}
+  h1{font-weight:400;font-size:46px;letter-spacing:.02em;margin:0;line-height:1}
+  .sub{font-family:"Homemade Apple",cursive;font-size:13px;color:var(--mute);margin:14px 0 0 2px;transform:rotate(-3deg);transform-origin:left center;white-space:nowrap}
+
+  .actions{position:fixed;right:52px;top:46px;display:flex;align-items:baseline;gap:30px;z-index:5}
+  .word{font:500 12px var(--serif);letter-spacing:.32em;text-transform:uppercase;background:none;border:0;padding:4px 0;color:var(--mute);cursor:pointer;position:relative;transition:color .4s}
+  .word::after{content:"";position:absolute;left:0;right:.32em;bottom:-3px;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .5s ease}
+  .word:hover{color:var(--ink)} .word:hover::after{transform:scaleX(1)}
+  #play{font:italic 400 30px var(--serif);letter-spacing:.02em;text-transform:none;color:var(--ink)}
+  #play::after{right:0}
+
+  .panel{position:fixed;left:52px;bottom:44px;display:flex;gap:26px;align-items:center;z-index:5;font:500 11px var(--serif);letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+  .panel .tempo{display:flex;align-items:center;gap:14px}
+  .panel .tempo b{font-weight:500;color:var(--ink);letter-spacing:.12em;min-width:26px}
+  .dot{width:2px;height:2px;border-radius:50%;background:var(--hair)}
+  .toggle{font:inherit;letter-spacing:inherit;text-transform:inherit;background:none;border:0;color:var(--mute);cursor:pointer;padding:4px 0;transition:color .4s}
+  .toggle:hover,.toggle.on{color:var(--ink)}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:120px;height:14px;background:transparent;margin:0;cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--ink)}
+  input[type=range]::-moz-range-track{height:1px;background:var(--ink)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:7px;height:7px;border-radius:50%;background:var(--ink);margin-top:-3px}
+  input[type=range]::-moz-range-thumb{width:7px;height:7px;border:0;border-radius:50%;background:var(--ink)}
+
+  .hint{position:fixed;right:52px;bottom:42px;text-align:right;font:italic 400 14px/1.85 var(--serif);color:var(--mute);pointer-events:none;user-select:none;z-index:3}
+  .hint b{font-style:normal;font-weight:500;color:var(--ink)}
+
+  #toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,8px);font:italic 400 15px var(--serif);letter-spacing:.04em;color:var(--mute);opacity:0;transition:opacity .5s,transform .5s;pointer-events:none;z-index:9}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  .sheet{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .5s;z-index:12}
+  body.void .sheet{background:rgba(6,6,6,.72)}
+  .sheet.show{opacity:1;pointer-events:auto}
+  .sheet .inner{width:min(520px,86vw);display:flex;flex-direction:column;gap:16px}
+  .sheet .t{font:italic 400 18px var(--serif);color:var(--mute)}
+  .sheet .code{font:400 12px/1.6 ui-monospace,Menlo,monospace;color:var(--ink);word-break:break-all;max-height:30vh;overflow:auto;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);padding:14px 0;user-select:all}
+  .sheet textarea{font:400 12px/1.6 ui-monospace,Menlo,monospace;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--hair);resize:none;height:64px;outline:none;padding:6px 0}
+  .sheet .row{display:flex;gap:26px;justify-content:flex-end;margin-bottom:10px}
+  #tip{position:fixed;pointer-events:none;font:italic 500 15px var(--serif);letter-spacing:.04em;transform:translate(14px,-140%);opacity:0;transition:opacity .2s;white-space:nowrap;z-index:9}
+  #tip small{font-style:normal;font-weight:400;font-size:11px;letter-spacing:.2em;color:var(--mute);margin-left:8px}
+
+  .focusbar{position:fixed;left:50%;top:44px;transform:translateX(-50%);display:flex;align-items:baseline;gap:24px;opacity:0;pointer-events:none;transition:opacity .8s;z-index:6}
+  .focusbar.show{opacity:1;pointer-events:auto}
+  .focusbar .t{font:italic 400 20px var(--serif)}
+  .focusbar .k{font:400 12px var(--serif);color:var(--mute);letter-spacing:.12em}
+
+  .veil{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;z-index:20;transition:opacity 1.8s;font:italic 300 20px var(--serif);color:var(--mute);letter-spacing:.08em}
+  .veil.gone{opacity:0;pointer-events:none}
+
+  @media (max-width:900px){
+    header{left:22px;top:24px} h1{font-size:30px} .sub{font-size:10px;margin-top:8px}
+    .actions{right:22px;top:24px;gap:18px} #play{font-size:24px}
+    .panel{left:22px;right:22px;bottom:20px;gap:14px;flex-wrap:wrap} input[type=range]{width:90px}
+    .hint{display:none}
+    .focusbar{top:auto;bottom:70px}
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div class="grain"></div>
+<div class="veil" id="veil">tuning the void</div>
+
+<header class="ui">
+  <h1>OPUS.VOID</h1>
+  <div class="sub">floating structures of sound</div>
+</header>
+
+<nav class="actions ui">
+  <button class="word" id="seed">seed</button>
+  <button class="word" id="clear">clear</button>
+  <button class="word" id="share">share</button>
+  <button class="word" id="play">play</button>
+</nav>
+
+<div class="panel ui">
+  <div class="tempo"><span>tempo</span><input type="range" id="bpm" min="36" max="160" value="80"><b id="bpmv">80</b></div>
+  <span class="dot"></span>
+  <button class="toggle on" id="rot">drift</button>
+  <span class="dot"></span>
+  <button class="toggle" id="mode">tutti</button>
+  <span class="dot"></span>
+  <button class="toggle" id="graph">traces</button>
+  <span class="dot"></span>
+  <button class="toggle" id="void">void</button>
+</div>
+
+<div class="hint ui">
+  six faces, six materials — pure · glass · droplet · breath · distance · felt<br>
+  <b>click</b> a staff to ink a note · click again to erase · <b>shift</b> for sharp<br>
+  <b>double-click</b> a face to write up close · drag to orbit · scroll to approach<br>
+  <b>space</b> to play · <b>V</b> to enter the void · <b>⌘Z</b> to undo
+</div>
+
+<div class="focusbar" id="focusbar">
+  <span class="t" id="ftitle">—</span>
+  <span class="k">← → around　↑ sky　↓ ground　esc back</span>
+  <button class="word" id="overview">overview</button>
+</div>
+
+<div id="tip"></div>
+<div id="toast"></div>
+<div class="sheet" id="sheet">
+  <div class="inner">
+    <div class="t">this structure, as a code</div>
+    <div class="code" id="code"></div>
+    <div class="row"><button class="word" id="copy">copy</button></div>
+    <div class="t">or open one you were sent</div>
+    <textarea id="paste" spellcheck="false" placeholder="paste a code — or press ⌘V anywhere on the page"></textarea>
+    <div class="row"><button class="word" id="sopen">open</button><button class="word" id="sclose">close</button></div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* ═════════════ constants ═════════════ */
+const INK = '#161616', INK_RGB = [0.086, 0.086, 0.086];
+const LS = 18, PXU = 160;
+const W = 10;
+const STEPS = 32;
+const MUSIC = '"Noto Music","Bravura","Apple Symbols","Segoe UI Symbol",serif';
+const SERIF = '"Cormorant Garamond","Times New Roman","Songti SC","Noto Serif SC",serif';
+const DEG = [0,2,4,5,7,9,11], NAMES = 'CDEFGAB';
+// six faces, six materials of sound
+const FACES = [
+  {name:'north',  mat:'pure',     rot:[0,0,0],            pos:[0,0, W/2], e0:0.00, e1:0.28},
+  {name:'east',   mat:'glass',    rot:[0,Math.PI/2,0],    pos:[ W/2,0,0], e0:0.00, e1:0.30},
+  {name:'south',  mat:'droplet',  rot:[0,Math.PI,0],      pos:[0,0,-W/2], e0:0.00, e1:0.32},
+  {name:'west',   mat:'breath',   rot:[0,-Math.PI/2,0],   pos:[-W/2,0,0], e0:0.00, e1:0.30},
+  {name:'sky',    mat:'distance', rot:[-Math.PI/2,0,0],   pos:[0, W/2,0], e0:0.42, e1:0.42},
+  {name:'ground', mat:'felt',     rot:[Math.PI/2,0,0],    pos:[0,-W/2,0], e0:0.00, e1:0.00},
+];
+const MARKINGS = ['gently','slowly','sustained','softly','as if breathing','from afar','tenderly','with stillness','lightly','dissolving','held','quietly','clear'];
+
+function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ═════════════ three ═════════════ */
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.setClearColor(0xffffff, 1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xffffff, 26, 62);
+const camera = new THREE.PerspectiveCamera(34, innerWidth/innerHeight, 0.1, 400);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.06;
+controls.zoomToCursor = true; controls.minDistance = 3; controls.maxDistance = 140; controls.rotateSpeed = 0.5;
+
+function homeView(){
+  const a = innerWidth/innerHeight, d = 40 * Math.max(1, 1.15/a);
+  return { pos: new THREE.Vector3(0.62, 0.42, 0.66).normalize().multiplyScalar(d), target: new THREE.Vector3(0, 0.6, 0) };
+}
+{ const h = homeView(); camera.position.copy(h.pos); controls.target.copy(h.target); }
+
+const tower = new THREE.Group(); scene.add(tower);
+const maxAniso = renderer.capabilities.getMaxAnisotropy();
+const fadeLineMat = new THREE.LineBasicMaterial({vertexColors:true, transparent:true, depthWrite:false});
+
+/* ═════════════ pages ═════════════ */
+const pages = [];
+function makeLayout(p){
+  const top = 165, bottom = 110, block = 4*LS + 96 + 4*LS;
+  const sysH = (p.h - top - bottom) / p.systems;
+  p.staves = [];
+  for(let s=0; s<p.systems; s++){
+    const tTop = top + s*sysH + (sysH - block)/2;
+    p.staves.push({clef:'treble', top:tTop, sys:s, idx:p.staves.length});
+    p.staves.push({clef:'bass', top:tTop + 4*LS + 96, sys:s, idx:p.staves.length});
+  }
+  p.X0 = 118; p.X1 = p.w - 72;
+  p.xs = p.X0 + 178; p.xe = p.X1 - 26;
+  p.sw = (p.xe - p.xs) / STEPS;
+}
+function createPage(id, fc){
+  const ww = W, wh = W, systems = 3;
+  const p = { id, fc, mat:fc.mat, face:fc.name, e0:fc.e0, e1:fc.e1, entropy:(fc.e0+fc.e1)/2, ww, wh, w:Math.round(ww*PXU), h:Math.round(wh*PXU),
+              systems, title:fc.mat, marking:MARKINGS[(id*5) % MARKINGS.length], no:id+1, notes:new Map() };
+  makeLayout(p);
+  // a few staff lines that run past the page edge, out into the void
+  p.ext = [];
+  const r = rng(31*id+3), nExt = fc.name === 'fondo' ? 0 : 2 + Math.floor(r()*2);
+  for(let i=0;i<nExt;i++) p.ext.push({ staff: Math.floor(r()*p.staves.length), line: Math.floor(r()*5), dir: r() < 0.5 ? -1 : 1, len: 2.5 + r()*9 });
+  p.canvas = document.createElement('canvas'); p.canvas.width = p.w; p.canvas.height = p.h;
+  p.ctx = p.canvas.getContext('2d');
+  p.tex = new THREE.CanvasTexture(p.canvas);
+  p.tex.colorSpace = THREE.SRGBColorSpace; p.tex.anisotropy = maxAniso;
+  const geo = new THREE.PlaneGeometry(ww, wh);
+  const front = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({map:p.tex, transparent:true, depthWrite:false, side:THREE.FrontSide}));
+  const back  = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({map:p.tex, transparent:true, depthWrite:false, side:THREE.BackSide, opacity:0.16}));
+  front.renderOrder = 1; back.renderOrder = 0;
+  front.add(back);
+  // in the void, a pale double of the page that surfaces only where your hand is
+  p.reveal = new THREE.Mesh(geo, new THREE.ShaderMaterial({
+    uniforms: { map:{value:p.tex}, opacity:{value:0}, color:{value:new THREE.Color(0xf2f0eb)} },
+    vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform sampler2D map; uniform float opacity; uniform vec3 color; varying vec2 vUv; void main(){ float a = texture2D(map, vUv).a; gl_FragColor = vec4(color, a * opacity); }',
+    transparent:true, depthWrite:false, side:THREE.DoubleSide }));
+  p.reveal.renderOrder = 1; p.reveal.visible = false; p.revealK = 0;
+  front.add(p.reveal);
+  front.userData.page = p; back.userData.page = p;
+  p.mesh = front; p.back = back; p.hitMeshes = [front, back];
+  // escaping hairlines
+  for(const e of p.ext){
+    const y = pxToLocal(p, 0, p.staves[e.staff].top + e.line*LS).y;
+    const x0 = e.dir * ww/2, x1 = e.dir * (ww/2 + e.len);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array([x0,y,0, x1,y,0]), 3));
+    g.setAttribute('color', new THREE.BufferAttribute(new Float32Array([...INK_RGB, 0.4, ...INK_RGB, 0]), 4));
+    const l = new THREE.Line(g, fadeLineMat); l.renderOrder = 2; front.add(l);
+  }
+  // playhead — a breath of a line
+  const phGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+  p.playhead = new THREE.Line(phGeo, new THREE.LineBasicMaterial({color:INK, transparent:true, opacity:0, depthWrite:false}));
+  p.playhead.renderOrder = 3; p.playhead.frustumCulled = false;
+  front.add(p.playhead);
+  pages.push(p);
+  return p;
+}
+function pxToLocal(p, x, y){ return new THREE.Vector3((x/p.w - 0.5)*p.ww, (0.5 - y/p.h)*p.wh, 0); }
+
+const cube = new THREE.Group(); tower.add(cube);
+FACES.forEach((fc, i) => {
+  const p = createPage(i, fc);
+  p.mesh.position.set(...fc.pos); p.mesh.rotation.set(...fc.rot); p.mesh.updateMatrix();
+  p.floorGroup = cube; cube.add(p.mesh);
+});
+const hitMeshes = pages.flatMap(p => p.hitMeshes);
+
+/* drifting fragments and dust above the roof — where the structure evaporates */
+const fragments = [];
+{
+  const r = rng(77);
+  for(let i=0;i<9;i++){
+    const len = 0.5 + r()*1.6, sp = LS/PXU, pts = [];
+    for(let l=0;l<5;l++){ pts.push(-len/2, l*sp, 0, len/2, l*sp, 0); }
+    const g = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3));
+    const m = new THREE.LineSegments(g, new THREE.LineBasicMaterial({color:INK, transparent:true, opacity:0.12 + r()*0.18, depthWrite:false}));
+    const ang = r()*Math.PI*2, rad = 3 + r()*6;
+    m.userData = { op: m.material.opacity, ang, rad, y: 6.5 + r()*7, sp: (r()-0.5)*0.06, rs: (r()-0.5)*0.2, ph: r()*6 };
+    m.rotation.set(r()*0.6, r()*Math.PI, r()*0.4);
+    tower.add(m); fragments.push(m);
+  }
+}
+const DUST = 260, dustPos = new Float32Array(DUST*3), dustSeed = [];
+{
+  const r = rng(5);
+  for(let i=0;i<DUST;i++){
+    const rad = Math.sqrt(r())*6.5, a = r()*Math.PI*2, y = 4.5 + Math.pow(r(), 0.7)*12;
+    dustSeed.push({rad, a, y, v: 0.04 + r()*0.12});
+  }
+}
+const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  const g = x.createRadialGradient(32,32,0,32,32,30);
+  g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.55,'rgba(255,255,255,1)'); g.addColorStop(0.72,'rgba(255,255,255,.35)'); g.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+const dust = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(dustPos, 3)),
+  new THREE.PointsMaterial({color:INK, map:dotTex, size:0.055, transparent:true, opacity:0.4, alphaTest:0.2, depthWrite:false}));
+dust.frustumCulled = false; tower.add(dust);
+
+/* ═════════════ drawing ═════════════ */
+function fitGlyph(c, ch, family, x, top, height){
+  c.font = `100px ${family}`;
+  const m = c.measureText(ch);
+  const gh = (m.actualBoundingBoxAscent||0) + (m.actualBoundingBoxDescent||0);
+  if(!gh) return;
+  c.font = `${100*height/gh}px ${family}`;
+  const m2 = c.measureText(ch);
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  c.fillText(ch, x + (m2.actualBoundingBoxLeft||0), top + m2.actualBoundingBoxAscent);
+}
+/* ── the hand: every line is inked, never ruled ── */
+const HAND = '"Homemade Apple", cursive';
+function hash(str){ let h = 2166136261; for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+// a pen stroke: gentle wander, pressure that swells and lifts, tapered ends
+function inkLine(c, x0, y0, x1, y1, w, r, wob=1){
+  const len = Math.hypot(x1-x0, y1-y0); if(len < 0.5) return;
+  const nx = -(y1-y0)/len, ny = (x1-x0)/len;
+  const n = Math.max(2, Math.ceil(len / 7));
+  const p1 = r()*6.28, p2 = r()*6.28, p3 = r()*6.28, f1 = 0.004 + r()*0.006, f2 = 0.02 + r()*0.02;
+  const amp = (0.7 + r()*0.9) * wob;
+  let px = x0, py = y0;
+  for(let i=1;i<=n;i++){
+    const t = i/n, d = t*len;
+    const off = amp * (Math.sin(d*f1 + p1)*1.0 + Math.sin(d*f2 + p2)*0.35);
+    const x = x0 + (x1-x0)*t + nx*off, y = y0 + (y1-y0)*t + ny*off;
+    const taper = Math.min(1, t*len/14, (1-t)*len/14 + 0.25);
+    const press = 0.78 + 0.32*Math.sin(d*0.011 + p3);
+    c.lineWidth = Math.max(0.4, w * press * (0.45 + 0.55*taper));
+    c.beginPath(); c.moveTo(px, py); c.lineTo(x, y); c.stroke();
+    px = x; py = y;
+  }
+}
+function brace(c, x, y0, y1, r){
+  const h = y1-y0, m = (y0+y1)/2, w = 13 + r()*3, k = (r()-0.5)*4;
+  c.beginPath(); c.moveTo(x, y0);
+  c.bezierCurveTo(x-w*1.3, y0+h*0.07, x+w*0.25+k, m-h*0.15, x-w, m);
+  c.bezierCurveTo(x+w*0.25+k, m+h*0.15, x-w*1.3, y1-h*0.07, x, y1);
+  c.bezierCurveTo(x-w*0.6, y1-h*0.09, x+w*0.9, m+h*0.17, x-w*0.8, m);
+  c.bezierCurveTo(x+w*0.9, m-h*0.17, x-w*0.6, y0+h*0.09, x, y0);
+  c.fill();
+}
+function sharpSign(c, x, y, r){
+  c.lineCap = 'round';
+  inkLine(c, x-3.5, y-LS*1.25, x-3.0, y+LS*1.45, 1.5, r, 0.4);
+  inkLine(c, x+3.5, y-LS*1.45, x+4.0, y+LS*1.25, 1.5, r, 0.4);
+  inkLine(c, x-8, y-LS*0.30, x+8, y-LS*0.62, 3.4, r, 0.3);
+  inkLine(c, x-8, y+LS*0.60, x+8, y+LS*0.28, 3.4, r, 0.3);
+}
+// a staff line that frays toward the sky
+function frayLine(c, x0, x1, y, e, r){
+  let x = x0;
+  while(x < x1){
+    const seg = e <= 0 ? (x1 - x0) : 30 + r()*180*(1.2 - e);
+    const xe = Math.min(x1, x + seg);
+    inkLine(c, x, y + (r()-0.5)*0.6, xe, y + (r()-0.5)*0.6, 1.45, r);
+    x = xe;
+    if(e > 0 && r() < e*0.5) x += 3 + r()*34*e;
+  }
+}
+function noteXY(p, n){
+  const s = p.staves[n.staff];
+  return { x: p.xs + (n.step + 0.5) * p.sw, y: s.top + 4*LS - n.k * LS/2 };
+}
+const eAt = (p, y) => p.e0 + (p.e1 - p.e0) * Math.max(0, 1 - y / p.h);
+function drawPage(p){
+  const c = p.ctx, r = rng(p.id*131 + 17);
+  c.clearRect(0, 0, p.w, p.h);
+  c.fillStyle = INK; c.strokeStyle = INK; c.lineCap = 'round';
+  // handwritten header
+  c.textBaseline = 'alphabetic';
+  c.save(); c.translate(p.w/2, 86); c.rotate(-0.012);
+  c.globalAlpha = 0.85; c.font = `30px ${HAND}`; c.textAlign = 'center'; c.fillText(p.title, 0, 0); c.restore();
+  c.save(); c.translate(p.X0 - 30, 134); c.rotate(-0.03);
+  c.globalAlpha = 0.62; c.font = `22px ${HAND}`; c.textAlign = 'left'; c.fillText(p.marking, 0, 0); c.restore();
+  c.globalAlpha = 0.42; c.font = `18px ${HAND}`;
+  c.textAlign = 'right'; c.fillText(String(p.no), p.X1, p.h - 46);
+  c.textAlign = 'left'; c.fillText(p.face, p.X0 - 30, p.h - 46);
+  c.globalAlpha = 1;
+
+  const extSet = new Set(p.ext.map(x => `${x.staff}|${x.line}|${x.dir}`));
+  for(const s of p.staves){
+    for(let i=0;i<5;i++){
+      const y = s.top + i*LS;
+      const x0 = extSet.has(`${s.idx}|${i}|-1`) ? 0 : p.X0 + (r()-0.5)*3;
+      const x1 = extSet.has(`${s.idx}|${i}|1`) ? p.w : p.X1 + (r()-0.5)*4;
+      const ey = eAt(p, y);
+      c.strokeStyle = `rgba(22,22,22,${0.72*(1 - ey*0.5)})`;
+      frayLine(c, x0, x1, y, ey, r);
+    }
+  }
+  for(let sy=0; sy<p.systems; sy++){
+    const t = p.staves[sy*2], b = p.staves[sy*2+1];
+    const y0 = t.top, y1 = b.top + 4*LS;
+    const es = eAt(p, y0);
+    c.strokeStyle = `rgba(22,22,22,${0.8*(1 - es*0.4)})`;
+    inkLine(c, p.X0, y0 - 1, p.X0 + (r()-0.5)*2, y1 + 1, 2, r, 0.5);
+    c.fillStyle = INK; c.globalAlpha = 1 - es*0.35; brace(c, p.X0 - 10, y0, y1, r); c.globalAlpha = 1;
+    for(let m=1;m<4;m++){
+      if(r() < es*0.35) continue;
+      const x = p.xs + m*8*p.sw + (r()-0.5)*3;
+      inkLine(c, x, y0 - 1, x + (r()-0.5)*3, y1 + 1, 1.4, r, 0.5);
+    }
+    if(sy === p.systems-1){
+      inkLine(c, p.X1-10, y0, p.X1-10 + (r()-0.5)*2, y1, 1.4, r, 0.4);
+      inkLine(c, p.X1-2.5, y0, p.X1-2.5 + (r()-0.5)*2, y1, 5, r, 0.3);
+    } else inkLine(c, p.X1, y0, p.X1 + (r()-0.5)*2, y1, 1.4, r, 0.5);
+  }
+  c.fillStyle = INK;
+  for(const s of p.staves){
+    c.globalAlpha = 1 - eAt(p, s.top)*0.3;
+    const rot = (r()-0.5)*0.07;
+    c.save(); c.translate(p.X0 + 40, s.top + 2*LS); c.rotate(rot); c.translate(-(p.X0 + 40), -(s.top + 2*LS));
+    if(s.clef === 'treble') fitGlyph(c, '\u{1D11E}', MUSIC, p.X0 + 14, s.top - 1.95*LS, (7.2 + r()*0.4)*LS);
+    else fitGlyph(c, '\u{1D122}', MUSIC, p.X0 + 16, s.top - 0.02*LS, (3.15 + r()*0.2)*LS);
+    if(s.sys === 0) fitGlyph(c, '\u{1D134}', MUSIC, p.X0 + 108, s.top + 1.0*LS, 2.0*LS);
+    c.restore();
+  }
+  c.globalAlpha = 1;
+  // ledger lines and accidentals stay on the paper; the notes themselves are alive (see below)
+  const rx = LS*0.62;
+  for(const n of p.notes.values()){
+    const {x, y} = noteXY(p, n);
+    const bottom = p.staves[n.staff].top + 4*LS;
+    const nr = rng(hash(keyOf(n)) ^ p.id);
+    c.strokeStyle = INK;
+    for(let kk=-2; kk>=n.k; kk-=2){ const yy = bottom - kk*LS/2; inkLine(c, x-rx*1.6, yy + (nr()-0.5), x+rx*1.6, yy + (nr()-0.5), 1.4, nr, 0.4); }
+    for(let kk=10; kk<=n.k; kk+=2){ const yy = bottom - kk*LS/2; inkLine(c, x-rx*1.6, yy + (nr()-0.5), x+rx*1.6, yy + (nr()-0.5), 1.4, nr, 0.4); }
+    if(n.sharp) sharpSign(c, x - rx*2.3, y, nr);
+  }
+  p.tex.needsUpdate = true;
+}
+const drawAll = () => pages.forEach(drawPage);
+
+/* ── living notes: each one drawn by hand, each one breathing ── */
+const GS = 3;                                   // glyph texture resolution (× page px)
+const GW = 3.4*LS, GH = 9*LS;                   // glyph box in page px, notehead at the centre
+const GLYPHS = { up: [], down: [] };
+function drawGlyph(up, seed){
+  const r = rng(seed);
+  const cv = document.createElement('canvas'); cv.width = Math.round(GW*GS); cv.height = Math.round(GH*GS);
+  const c = cv.getContext('2d'); c.scale(GS, GS);
+  c.fillStyle = '#fff'; c.strokeStyle = '#fff'; c.lineCap = 'round'; c.lineJoin = 'round';
+  const cx = GW/2, cy = GH/2;
+  const rx = LS*(0.6 + r()*0.08), ry = LS*(0.42 + r()*0.06), rot = -0.36 + (r()-0.5)*0.22;
+  // notehead: an ink drop, never a perfect ellipse
+  const ph1 = r()*6.28, ph2 = r()*6.28;
+  c.beginPath();
+  for(let i=0;i<=40;i++){
+    const a = i/40*Math.PI*2;
+    const k = 1 + 0.07*Math.sin(3*a + ph1) + 0.04*Math.sin(5*a + ph2);
+    const ex = Math.cos(a)*rx*k, ey = Math.sin(a)*ry*k;
+    const x = cx + ex*Math.cos(rot) - ey*Math.sin(rot), y = cy + ex*Math.sin(rot) + ey*Math.cos(rot);
+    i ? c.lineTo(x, y) : c.moveTo(x, y);
+  }
+  c.closePath(); c.fill();
+  // stem: one stroke, slightly bowed, pressure lifting toward the tip
+  const sx = up ? cx + rx*0.86 : cx - rx*0.86, sy = cy + (up ? -2 : 2);
+  const L = LS*(3.3 + r()*0.45), bow = (r()-0.5)*5;
+  const ex = sx + (r()-0.5)*3, ey = sy + (up ? -L : L);
+  const N = 22; let px = sx, py = sy;
+  for(let i=1;i<=N;i++){
+    const t = i/N;
+    const x = sx + (ex-sx)*t + Math.sin(t*Math.PI)*bow, y = sy + (ey-sy)*t;
+    c.lineWidth = 2.3 - 1.1*t; c.beginPath(); c.moveTo(px, py); c.lineTo(x, y); c.stroke(); px = x; py = y;
+  }
+  // some notes carry a flag — a small wing
+  if(r() < 0.45){
+    const dir = up ? 1 : -1;
+    c.beginPath(); c.moveTo(px, py);
+    c.bezierCurveTo(px + 2, py + dir*LS*0.9, px + LS*1.25, py + dir*LS*1.1, px + LS*0.85, py + dir*LS*2.3);
+    c.bezierCurveTo(px + LS*0.95, py + dir*LS*1.4, px + 3, py + dir*LS*1.3, px, py + dir*LS*0.75);
+    c.closePath(); c.fill();
+  }
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = maxAniso;
+  return tex;
+}
+for(let i=0;i<12;i++){ GLYPHS.up.push(drawGlyph(true, 900+i)); GLYPHS.down.push(drawGlyph(false, 700+i)); }
+const glyphGeo = new THREE.PlaneGeometry(GW/PXU, GH/PXU);
+function glyphFor(p, n){ const list = n.k < 4 ? GLYPHS.up : GLYPHS.down; return list[hash(`${p.id}|${keyOf(n)}`) % list.length]; }
+const living = new Set();
+function makeLife(p, n, born){
+  const m = new THREE.Mesh(glyphGeo, new THREE.MeshBasicMaterial({map:glyphFor(p, n), color:inkC.clone(), transparent:true, depthWrite:false, side:THREE.DoubleSide, opacity:0}));
+  m.renderOrder = 3;
+  const {x, y} = noteXY(p, n);
+  const base = pxToLocal(p, x, y); base.z = 0.012;
+  const h = hash(`${p.id}|${keyOf(n)}`);
+  m.userData = { p, n, base, born: born ? nowT : -10, hop: -10, die: -1,
+                 ph: (h % 1000)/1000*6.28, fr: 0.7 + (h % 97)/97*0.6, amp: 0.025 + (h % 53)/53*0.04, tilt: ((h % 41)/41 - 0.5)*0.08 };
+  m.position.copy(base);
+  p.mesh.add(m); living.add(m); n._life = m;
+  return m;
+}
+function syncLife(p, animate){
+  for(const n of p.notes.values()){
+    if(!n._life || n._life.userData.die >= 0) makeLife(p, n, animate);
+    else n._life.material.map = glyphFor(p, n);
+  }
+  for(const m of living){
+    const u = m.userData;
+    if(u.p === p && u.die < 0 && p.notes.get(keyOf(u.n)) !== u.n) u.die = nowT;
+  }
+}
+function updateLife(){
+  for(const m of living){
+    const u = m.userData, p = u.p;
+    const bt = Math.max(0, nowT - u.born);
+    // birth: the note lands with a small overshoot, like a drop settling
+    const grow = bt < 0.55 ? 1 + Math.sin(Math.min(1, bt/0.55)*Math.PI) * 0.18 - Math.pow(1 - Math.min(1, bt/0.55), 3) : 1;
+    // wind over grass: a slow sway travelling along the staff
+    const sway = Math.sin(nowT*u.fr + u.ph + u.base.x*0.7) * u.amp * (1 + 0.6*flowK);
+    // when it sounds, it hops
+    const ht = (nowT - u.hop) / 0.46;
+    const hop = ht >= 0 && ht < 1 ? Math.sin(ht*Math.PI) : 0;
+    const flick = ht >= 0 && ht < 1 ? Math.sin(ht*Math.PI*2) * (1-ht) * 0.22 : 0;
+    let alive = 1;
+    if(u.die >= 0){
+      const dt = (nowT - u.die) / 0.45;
+      if(dt >= 1){ p.mesh.remove(m); m.material.dispose(); living.delete(m); continue; }
+      alive = 1 - dt;
+    }
+    const sc = Math.max(0.001, grow * alive) * (1 + hop*0.08);
+    m.scale.set(sc * (1 - hop*0.05), sc * (1 + hop*0.1), 1);
+    m.rotation.z = u.tilt + sway + flick;
+    m.position.set(u.base.x, u.base.y + hop * 0.09, u.base.z);
+    const pageOp = p.facing > 0 ? p.fo : 0.2;
+    m.material.opacity = (nowT < u.born ? 0 : Math.min(1, bt*6)) * (pageOp*(1 - voidK) + 0.92*voidK) * alive;
+  }
+}
+
+/* ── birds: now and then a note takes flight ── */
+const birds = [];
+for(let i=0;i<48;i++){
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(10*3), 3));
+  g.setIndex([0,1,2, 1,3,2, 2,3,4,  5,6,7, 6,8,7, 7,8,9]);
+  const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({color:INK, transparent:true, opacity:0, depthWrite:false, side:THREE.DoubleSide}));
+  m.frustumCulled = false; m.visible = false; m.renderOrder = 7;
+  birds.push({m, t0:-1});
+}
+let birdIdx = 0;
+const _bp = new THREE.Vector3();
+function takeFlight(p, n){
+  const b = birds[birdIdx++ % birds.length];
+  tower.add(b.m);
+  _bp.copy(noteFloorPos(p, n, 0.05)).applyMatrix4(cube.matrix);
+  const out = _bp.clone().setY(0); if(out.lengthSq() < 0.01) out.set(1,0,0); out.normalize();
+  b.pos = _bp.clone(); b.t0 = nowT; b.life = 4.5 + Math.random()*2.5;
+  b.vel = out.multiplyScalar(0.7 + Math.random()*0.7).add(new THREE.Vector3((Math.random()-0.5)*0.4, 0.5 + Math.random()*0.5, (Math.random()-0.5)*0.4));
+  b.size = 0.13 + Math.random()*0.11; b.fl = 7 + Math.random()*4; b.ph = Math.random()*6; b.curl = (Math.random()-0.5)*0.8;
+  b.m.visible = true; b.m.material.color.copy(inkC);
+}
+function updateBirds(dt){
+  for(const b of birds){
+    if(b.t0 < 0) continue;
+    const t = nowT - b.t0;
+    if(t > b.life){ b.t0 = -1; b.m.visible = false; continue; }
+    b.vel.y += 0.28*dt;
+    const ca = Math.cos(b.curl*dt), sa = Math.sin(b.curl*dt);
+    const vx = b.vel.x*ca - b.vel.z*sa, vz = b.vel.x*sa + b.vel.z*ca; b.vel.x = vx; b.vel.z = vz;
+    b.pos.addScaledVector(b.vel, dt);
+    b.m.position.copy(b.pos); b.m.quaternion.copy(camera.quaternion);
+    const s = b.size * Math.min(1, t*3), f = Math.sin(t*b.fl + b.ph);
+    const yt = f*0.55, ym = f*0.22 + 0.06;
+    const a = b.m.geometry.attributes.position.array;
+    const pts = [[0,0.07],[0,-0.07],[-0.42,ym+0.05],[-0.42,ym-0.03],[-1,yt],  [0,0.07],[0,-0.07],[0.42,ym+0.05],[0.42,ym-0.03],[1,yt]];
+    pts.forEach(([x,y],i) => { a[i*3] = x*s; a[i*3+1] = y*s; a[i*3+2] = 0; });
+    b.m.geometry.attributes.position.needsUpdate = true;
+    b.m.material.opacity = 0.85 * Math.min(1, t*4) * Math.min(1, (b.life - t)/1.6);
+  }
+}
+
+/* ═════════════ coordinates & pitch ═════════════ */
+function noteFloorPos(p, n, lift=0){
+  const {x, y} = noteXY(p, n);
+  const v = pxToLocal(p, x, y); v.z = lift;
+  return v.applyMatrix4(p.mesh.matrix);
+}
+function locate(p, x, y){
+  let best = 0, bd = 1e9;
+  p.staves.forEach((s, i) => { const d = Math.abs(y - (s.top + 2*LS)); if(d < bd){ bd = d; best = i; } });
+  const s = p.staves[best];
+  const raw = (s.top + 4*LS - y) / (LS/2);
+  if(raw < -4.9 || raw > 12.9) return null;
+  const k = Math.max(-4, Math.min(12, Math.round(raw)));
+  const step = Math.floor((x - p.xs) / p.sw);
+  if(step < 0 || step >= STEPS) return null;
+  return { staff:best, k, step };
+}
+const dia = (s, k) => (s.clef === 'treble' ? 30 : 18) + k;
+const midiOf = (p, n) => { const d = dia(p.staves[n.staff], n.k); return 12*(Math.floor(d/7)+1) + DEG[d%7] + (n.sharp?1:0); };
+const nameOf = (p, n) => { const d = dia(p.staves[n.staff], n.k); return NAMES[d%7] + (n.sharp?'♯':'') + Math.floor(d/7); };
+const keyOf = n => `${n.staff}|${n.step}|${n.k}`;
+
+/* ═════════════ audio — pure tones, clean silence ═════════════
+   Reference: near-pure sine (harmonics −40…−60 dB), soft 50–100 ms onset,
+   ~0.2 s to −20 dB, ~0.6 s to −40 dB, almost dry. Each face bends that tone
+   toward one material, without losing its transparency.                    */
+let actx = null, master, dry, room, echo, noiseBuf;
+function makeIR(ac, seconds){
+  const len = Math.floor(ac.sampleRate * seconds), ir = ac.createBuffer(2, len, ac.sampleRate);
+  for(let ch=0; ch<2; ch++){
+    const d = ir.getChannelData(ch); let lp = 0;
+    for(let i=0;i<len;i++){
+      const t = i/len; lp += (0.75 - 0.6*t) * ((Math.random()*2-1) - lp);
+      d[i] = lp * Math.pow(1-t, 3.2) * (i < 600 ? i/600 : 1);
+    }
+  }
+  return ir;
+}
+function ensureAudio(){
+  if(actx){ if(actx.state === 'suspended') actx.resume(); return actx; }
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  const lim = actx.createDynamicsCompressor();
+  lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 10; lim.attack.value = 0.003; lim.release.value = 0.25;
+  master = actx.createGain(); master.gain.value = 0.9; master.connect(lim); lim.connect(actx.destination);
+  dry = actx.createGain(); dry.gain.value = 1; dry.connect(master);
+  // a small, bright room — air around the tone, not a cathedral
+  room = actx.createGain(); room.gain.value = 1;
+  const conv = actx.createConvolver(); conv.buffer = makeIR(actx, 2.4);
+  const hp = actx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 300;
+  const rg = actx.createGain(); rg.gain.value = 0.55;
+  room.connect(conv); conv.connect(hp); hp.connect(rg); rg.connect(master);
+  // a distant echo, used by "distance"
+  echo = actx.createGain(); echo.gain.value = 1;
+  const d1 = actx.createDelay(2); d1.delayTime.value = 0.43;
+  const fb = actx.createGain(); fb.gain.value = 0.38;
+  const elp = actx.createBiquadFilter(); elp.type = 'lowpass'; elp.frequency.value = 2200;
+  const ep = actx.createStereoPanner(); ep.pan.value = 0;
+  echo.connect(d1); d1.connect(elp); elp.connect(fb); fb.connect(d1);
+  const eo = actx.createGain(); eo.gain.value = 0.6; elp.connect(eo); eo.connect(master); eo.connect(room);
+  noiseBuf = actx.createBuffer(1, actx.sampleRate*2, actx.sampleRate);
+  const nd = noiseBuf.getChannelData(0); for(let i=0;i<nd.length;i++) nd[i] = Math.random()*2-1;
+  return actx;
+}
+function chain(pan, sends){
+  const out = actx.createGain();
+  const pn = actx.createStereoPanner(); pn.pan.value = pan;
+  out.connect(pn);
+  const dg = actx.createGain(); dg.gain.value = sends.dry; pn.connect(dg); dg.connect(dry);
+  if(sends.room){ const g = actx.createGain(); g.gain.value = sends.room; pn.connect(g); g.connect(room); }
+  if(sends.echo){ const g = actx.createGain(); g.gain.value = sends.echo; pn.connect(g); g.connect(echo); }
+  return out;
+}
+function tone(dest, f, t, amp, att, tau, life, type='sine'){
+  const o = actx.createOscillator(); o.type = type; o.frequency.value = f;
+  const g = actx.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(amp, t + att);
+  g.gain.setTargetAtTime(0, t + att, tau);
+  o.connect(g); g.connect(dest); o.start(t); o.stop(t + life);
+  return o;
+}
+const MATERIALS = {
+  // pure — the reference tone itself
+  pure(f, t, a, pan){
+    const o = chain(pan, {dry:1, room:0.12});
+    tone(o, f, t, a, 0.05, 0.11, 1.0);
+  },
+  // glass — a faint inharmonic shimmer, rings a little longer
+  glass(f, t, a, pan){
+    const o = chain(pan, {dry:0.9, room:0.28});
+    tone(o, f, t, a*0.9, 0.008, 0.26, 2.0);
+    tone(o, f*2.0, t, a*0.06, 0.006, 0.16, 1.2);
+    tone(o, f*2.76, t, a*0.035, 0.004, 0.09, 0.8);
+  },
+  // droplet — a quick upward glide, a soft plip
+  droplet(f, t, a, pan){
+    const o = chain(pan, {dry:1, room:0.22});
+    const osc = tone(o, f, t, a, 0.004, 0.075, 0.7);
+    osc.frequency.setValueAtTime(f*0.86, t);
+    osc.frequency.exponentialRampToValueAtTime(f, t + 0.035);
+  },
+  // breath — slow bloom, breath around the tone, a late tremble
+  breath(f, t, a, pan){
+    const o = chain(pan, {dry:0.85, room:0.3});
+    const osc = tone(o, f, t, a*0.85, 0.2, 0.3, 2.0);
+    const lfo = actx.createOscillator(), lg = actx.createGain();
+    lfo.frequency.value = 4.6; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f*0.003, t + 0.5);
+    lfo.connect(lg); lg.connect(osc.frequency); lfo.start(t); lfo.stop(t + 2.0);
+    const ns = actx.createBufferSource(); ns.buffer = noiseBuf; ns.loop = true;
+    const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = 14;
+    const ng = actx.createGain();
+    ng.gain.setValueAtTime(0, t); ng.gain.linearRampToValueAtTime(a*1.6, t + 0.16); ng.gain.setTargetAtTime(0, t + 0.16, 0.22);
+    ns.connect(bp); bp.connect(ng); ng.connect(o); ns.start(t, Math.random()); ns.stop(t + 1.6);
+  },
+  // distance — the tone, quieter, with its own echo far away
+  distance(f, t, a, pan){
+    const o = chain(pan, {dry:0.55, room:0.4, echo:0.7});
+    tone(o, f, t, a*0.85, 0.07, 0.16, 1.4);
+  },
+  // felt — a felt hammer: soft, warm, close
+  felt(f, t, a, pan){
+    const o = chain(pan, {dry:1, room:0.1});
+    const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(6000, f*2.5); lp.Q.value = 0.3;
+    lp.connect(o);
+    tone(lp, f, t, a, 0.012, 0.16, 1.2);
+    tone(lp, f*2, t, a*0.1, 0.008, 0.05, 0.4);
+    tone(lp, f, t, a*0.25, 0.012, 0.03, 0.3, 'triangle');
+  },
+};
+function voice(midi, t, pan, amp, mat){
+  const f = 440 * Math.pow(2, (midi - 69)/12);
+  const loud = amp * Math.min(1.4, Math.pow(440/f, 0.18));   // gentle loudness balance across register
+  (MATERIALS[mat] || MATERIALS.pure)(f, t, loud, pan);
+}
+const _pv = new THREE.Vector3();
+function panFor(p, n){
+  _pv.copy(noteFloorPos(p, n)).applyMatrix4(p.floorGroup.matrixWorld).project(camera);
+  return Math.max(-0.95, Math.min(0.95, _pv.x));
+}
+
+/* ═════════════ strings: the staff line itself vibrates ═════════════ */
+const SPTS = 120;
+const strings = [];
+for(let i=0;i<28;i++){
+  const g = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(SPTS*3), 3));
+  const l = new THREE.Line(g, new THREE.LineBasicMaterial({color:INK, transparent:true, opacity:0, depthWrite:false}));
+  l.renderOrder = 4; l.frustumCulled = false; l.visible = false;
+  strings.push({line:l, t0:-1});
+}
+let stringIdx = 0;
+const halos = [];
+const discGeo = new THREE.CircleGeometry(1, 40);
+for(let i=0;i<40;i++){
+  const m = new THREE.Mesh(discGeo, new THREE.MeshBasicMaterial({color:INK, transparent:true, opacity:0, depthWrite:false, side:THREE.DoubleSide}));
+  m.renderOrder = 4; m.visible = false; halos.push({m, t0:-1});
+}
+let haloIdx = 0;
+const clock = new THREE.Clock();
+let nowT = 0;
+function pluck(p, n, strength=1){
+  // the nearest staff line to the note
+  const s = p.staves[n.staff];
+  const kk = Math.max(0, Math.min(8, Math.round(n.k/2)*2));
+  const ypx = s.top + 4*LS - kk*LS/2;
+  const {x} = noteXY(p, n);
+  const st = strings[stringIdx++ % strings.length];
+  p.mesh.add(st.line);
+  st.p = p; st.y = pxToLocal(p, 0, ypx).y;
+  st.xa = pxToLocal(p, p.X0, 0).x; st.xb = pxToLocal(p, p.X1, 0).x; st.xn = pxToLocal(p, x, 0).x;
+  st.t0 = nowT; st.s = strength; st.line.visible = true; st.tau = {pure:0.6, glass:1.1, droplet:0.45, breath:1.2, distance:1.0, felt:0.55}[p.mat] || 0.8;
+  const h = halos[haloIdx++ % halos.length];
+  p.floorGroup.add(h.m); h.m.position.copy(noteFloorPos(p, n, 0.02)); h.m.quaternion.copy(p.mesh.quaternion);
+  h.m.visible = true; h.t0 = nowT;
+}
+function updateStrings(){
+  for(const st of strings){
+    if(st.t0 < 0) continue;
+    const t = nowT - st.t0;
+    if(t > 3.2){ st.t0 = -1; st.line.visible = false; continue; }
+    const a = st.line.geometry.attributes.position.array;
+    const A = 0.05 * st.s * Math.exp(-t/(st.tau*0.9));
+    for(let i=0;i<SPTS;i++){
+      const x = st.xa + (st.xb - st.xa) * i/(SPTS-1);
+      const dx = Math.abs(x - st.xn);
+      const front = Math.max(0, Math.min(1, (t*7 - dx) * 1.5));            // the wave travels outward from the pluck
+      const env = Math.exp(-dx/3.2) * front;
+      const pin = Math.sin(Math.PI * (x - st.xa) / (st.xb - st.xa));        // fixed at both ends, like a string
+      const y = st.y + A * env * pin * Math.sin(dx*6.2 - t*22);
+      a[i*3] = x; a[i*3+1] = y; a[i*3+2] = 0.012;
+    }
+    st.line.geometry.attributes.position.needsUpdate = true;
+    st.line.material.opacity = (0.7 - 0.25*voidK) * Math.min(1, t*8) * Math.exp(-t/st.tau);
+  }
+  for(const h of halos){
+    if(h.t0 < 0) continue;
+    const t = (nowT - h.t0) / 1.6;
+    if(t >= 1){ h.t0 = -1; h.m.visible = false; continue; }
+    h.m.scale.setScalar(0.05 + (1 - Math.pow(1-t, 3)) * 0.2);
+    h.m.material.opacity = (0.1 + 0.18*voidK) * (1 - t);
+  }
+}
+
+/* ═════════════ hover ═════════════ */
+const ghost = new THREE.Mesh(glyphGeo, new THREE.MeshBasicMaterial({map:GLYPHS.up[0], color:INK, transparent:true, opacity:0.22, depthWrite:false, side:THREE.DoubleSide}));
+ghost.renderOrder = 5; ghost.visible = false;
+let voidOn = false, voidK = 0, lastVoidK = -1;
+const WHITE = new THREE.Color(0xffffff), DARK = new THREE.Color(0x060606), INKC = new THREE.Color(INK), LIGHT = new THREE.Color(0xf2f0eb);
+const bg = new THREE.Color(), inkC = new THREE.Color(INK);
+const ghostQ = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), -0.36);
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let mouseIn = false, mouseDirty = false, mouseClient = {x:0, y:0}, hover = null;
+const tip = document.getElementById('tip');
+function pick(cx, cy){
+  const r = renderer.domElement.getBoundingClientRect();
+  mouse.set(((cx - r.left)/r.width)*2 - 1, -((cy - r.top)/r.height)*2 + 1);
+  raycaster.setFromCamera(mouse, camera);
+  for(const h of raycaster.intersectObjects(hitMeshes, false)){
+    if(!h.uv) continue;
+    const p = h.object.userData.page;
+    return { p, loc: locate(p, h.uv.x * p.w, (1 - h.uv.y) * p.h) };
+  }
+  return null;
+}
+function updateHover(){
+  if(!mouseIn || dragging){ hover = null; ghost.visible = false; tip.style.opacity = 0; return; }
+  hover = pick(mouseClient.x, mouseClient.y);
+  if(hover && hover.loc){
+    const {p, loc} = hover;
+    p.mesh.add(ghost);
+    const gxy = noteXY(p, loc); ghost.position.copy(pxToLocal(p, gxy.x, gxy.y)); ghost.position.z = 0.016;
+    ghost.material.map = loc.k < 4 ? GLYPHS.up[0] : GLYPHS.down[0];
+    ghost.rotation.set(0, 0, 0);
+    ghost.visible = true;
+    const ex = p.notes.get(keyOf(loc));
+    tip.innerHTML = `${nameOf(p, ex || loc)}<small>${ex ? 'erase' : p.mat}</small>`;
+    tip.style.left = mouseClient.x + 'px'; tip.style.top = mouseClient.y + 'px'; tip.style.opacity = 1;
+  } else { ghost.visible = false; tip.style.opacity = 0; }
+}
+
+/* ═════════════ editing ═════════════ */
+let notesDirty = true;
+function toggleNote(p, loc, shift){
+  const key = keyOf(loc), ex = p.notes.get(key);
+  let sounded = null;
+  if(ex){ if(shift){ ex.sharp = !ex.sharp; sounded = ex; } else p.notes.delete(key); }
+  else { const n = {...loc, sharp:!!shift}; p.notes.set(key, n); sounded = n; }
+  drawPage(p); syncLife(p, true); notesDirty = true; graphDirty = true;
+  if(sounded){
+    ensureAudio();
+    voice(midiOf(p, sounded), actx.currentTime + 0.01, panFor(p, sounded), 0.3, p.mat);
+    pluck(p, sounded, 0.9);
+    setTimeout(() => { if(sounded._life) sounded._life.userData.hop = nowT; }, 560);
+  }
+}
+
+/* ═════════════ playback ═════════════ */
+let playing = false, mode = 'tutti', bpm = 80;
+let nextTime = 0, gStep = 0, timer = null, events = [], curStep = -1, curStepTime = 0;
+let stepIndex = null, loopLen = STEPS;
+const stepDur = () => 60 / bpm / 2;
+const pageLen = p => mode === 'tutti' ? STEPS : p.systems * STEPS;
+const pageTime = (p, n) => mode === 'tutti' ? n.step : p.staves[n.staff].sys * STEPS + n.step;
+function buildStepIndex(){
+  loopLen = mode === 'tutti' ? STEPS : 3 * STEPS;
+  stepIndex = Array.from({length: loopLen}, () => []);
+  for(const p of pages){
+    const L = pageLen(p);
+    for(const n of p.notes.values()){ for(let g = pageTime(p, n); g < loopLen; g += L) stepIndex[g].push({p, n}); }
+  }
+}
+function scheduleStep(g, t){
+  const list = stepIndex[g % loopLen];
+  let use = list;
+  if(list.length > 12){ use = []; const k = list.length/12; for(let i=0;i<12;i++) use.push(list[Math.floor(i*k)]); }
+  const amp = 0.26 / Math.sqrt(Math.max(1, use.length/1.5));
+  for(const {p, n} of use) voice(midiOf(p, n), t + Math.random()*0.012, panFor(p, n), amp, p.mat);
+  events.push({time:t, g, list});
+}
+function tick(){
+  if(notesDirty){ buildStepIndex(); notesDirty = false; }
+  while(nextTime < actx.currentTime + 0.15){ scheduleStep(gStep, nextTime); nextTime += stepDur(); gStep++; }
+}
+function play(){
+  ensureAudio(); buildStepIndex(); notesDirty = false;
+  playing = true; gStep = 0; events = []; curStep = -1;
+  nextTime = actx.currentTime + 0.1;
+  graphVisible = true; graphDirty = true; setGraphBtn();
+  timer = setInterval(tick, 25); tick(); setPlayBtn();
+}
+function stop(){
+  playing = false; clearInterval(timer); timer = null; events = []; curStep = -1;
+  pages.forEach(p => p.playhead.material.opacity = 0);
+  setPlayBtn();
+}
+function onStepVisual(ev){
+  curStep = ev.g; curStepTime = ev.time;
+  let flown = 0;
+  for(const {p, n} of ev.list){
+    pluck(p, n, 1);
+    if(n._life) n._life.userData.hop = nowT;
+    if(flown < 2 && Math.random() < 0.09){ takeFlight(p, n); flown++; }
+    const nd = n._node; if(nd){ nd.lit = nowT; nd.ever = true; for(const s of nd.inSegs){ s.lit = nowT; s.ever = true; } }
+  }
+}
+function updatePlayheads(){
+  if(!playing || curStep < 0) return;
+  const frac = Math.min(1, Math.max(0, (actx.currentTime - curStepTime) / stepDur()));
+  for(const p of pages){
+    const pt = curStep % pageLen(p);
+    const sys = mode === 'tutti' ? -1 : Math.floor(pt / STEPS);
+    const x = p.xs + (pt % STEPS + frac) * p.sw;
+    const yTop = sys < 0 ? p.staves[0].top - 30 : p.staves[sys*2].top - 30;
+    const yBot = sys < 0 ? p.staves[p.staves.length-1].top + 4*LS + 30 : p.staves[sys*2+1].top + 4*LS + 30;
+    const a = pxToLocal(p, x, yTop), b = pxToLocal(p, x, yBot);
+    const arr = p.playhead.geometry.attributes.position.array;
+    arr[0]=a.x; arr[1]=a.y; arr[2]=0.012; arr[3]=b.x; arr[4]=b.y; arr[5]=0.012;
+    p.playhead.geometry.attributes.position.needsUpdate = true;
+    p.playhead.material.opacity = 0.16 * (1 - voidK);
+  }
+}
+
+/* ═════════════ traces: light written through space ═════════════ */
+let graphVisible = false, graphDirty = true, gNodes = [], gSegs = [];
+const traceGeo = new THREE.BufferGeometry();
+const traces = new THREE.LineSegments(traceGeo, new THREE.LineBasicMaterial({vertexColors:true, transparent:true, depthWrite:false}));
+const nodeGeo = new THREE.BufferGeometry();
+const nodes = new THREE.Points(nodeGeo, new THREE.PointsMaterial({vertexColors:true, map:dotTex, size:0.12, transparent:true, alphaTest:0.05, depthWrite:false}));
+for(const o of [traces, nodes]){ o.frustumCulled = false; o.renderOrder = 6; tower.add(o); }
+function buildGraph(){
+  gNodes = []; gSegs = [];
+  const voices = new Map(), byTime = new Map();
+  for(const p of pages) for(const n of p.notes.values()){
+    const nd = { p, n, local: noteFloorPos(p, n, 0.03), wp: new THREE.Vector3(), t: pageTime(p, n), lit:-99, ever:false, inSegs:[] };
+    n._node = nd; gNodes.push(nd);
+    const vk = mode === 'tutti' ? `${p.id}|${n.staff}` : `${p.id}|${p.staves[n.staff].clef}`;
+    if(!voices.has(vk)) voices.set(vk, []); voices.get(vk).push(nd);
+    if(!byTime.has(nd.t)) byTime.set(nd.t, []); byTime.get(nd.t).push(nd);
+  }
+  const add = (a, b, h) => { const s = {a, b, h, lit:-99, ever:false}; gSegs.push(s); b.inSegs.push(s); };
+  for(const list of voices.values()){
+    list.sort((a,b) => a.t - b.t || a.n.k - b.n.k);
+    for(let i=1;i<list.length;i++) add(list[i-1], list[i], false);
+  }
+  for(const list of byTime.values()){
+    if(list.length < 2) continue;
+    list.forEach(nd => nd.wp.copy(nd.local).applyMatrix4(nd.p.floorGroup.matrix));
+    list.sort((a,b) => (a.wp.y - b.wp.y) || (Math.atan2(a.wp.z,a.wp.x) - Math.atan2(b.wp.z,b.wp.x)));
+    for(let i=1;i<list.length;i++) add(list[i-1], list[i], true);
+  }
+  const ns = Math.max(1, gSegs.length), nn = Math.max(1, gNodes.length);
+  traceGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(ns*6), 3));
+  traceGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(ns*8), 4));
+  nodeGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(nn*3), 3));
+  nodeGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(nn*4), 4));
+  traceGeo.setDrawRange(0, gSegs.length*2); nodeGeo.setDrawRange(0, gNodes.length);
+  graphDirty = false;
+}
+const _b = new THREE.Vector3();
+function updateGraph(){
+  const show = graphVisible || voidK > 0.01;
+  traces.visible = nodes.visible = show;
+  if(!show) return;
+  const C = [INK_RGB[0] + (0.96-INK_RGB[0])*voidK, INK_RGB[1] + (0.95-INK_RGB[1])*voidK, INK_RGB[2] + (0.92-INK_RGB[2])*voidK];
+  const gv = graphVisible ? 1 : voidK;   // in the void, the constellation is always there
+  if(graphDirty) buildGraph();
+  for(const nd of gNodes) nd.wp.copy(nd.local).applyMatrix4(nd.p.floorGroup.matrix);
+  const pa = traceGeo.attributes.position.array, ca = traceGeo.attributes.color.array;
+  const quiet = focused ? 0.45 : 1;
+  gSegs.forEach((s, i) => {
+    const age = nowT - s.lit;
+    const peak = s.h ? 0.26 : 0.62;
+    const trace = age >= 0 ? peak * Math.exp(-age/3.4) : 0;
+    const restV = s.h ? 0.12 : 0.34;   // in darkness the structure stays faintly lit
+    const rest0 = playing ? (s.ever ? (s.h ? 0.03 : 0.07) : 0) : (s.h ? 0.09 : 0.24);
+    const rest = rest0 + (Math.max(rest0, restV) - rest0) * voidK;
+    const alpha = Math.max(trace, rest) * quiet * gv;
+    const grow = playing && age < 0.5 ? 1 - Math.pow(1 - Math.max(0, age/0.5), 3) : (playing && !s.ever && voidK < 0.5 ? 0 : 1);
+    _b.lerpVectors(s.a.wp, s.b.wp, grow);
+    pa.set([s.a.wp.x, s.a.wp.y, s.a.wp.z, _b.x, _b.y, _b.z], i*6);
+    ca.set([...C, alpha*0.8, ...C, alpha], i*8);
+  });
+  traceGeo.attributes.position.needsUpdate = true; traceGeo.attributes.color.needsUpdate = true;
+  const npa = nodeGeo.attributes.position.array, nca = nodeGeo.attributes.color.array;
+  gNodes.forEach((nd, i) => {
+    const age = nowT - nd.lit;
+    const flare = age >= 0 ? Math.exp(-age/1.4) : 0;
+    const a = 0.7 * flare;   // the living note is its own mark; the dot only flares when it sounds
+    npa.set([nd.wp.x, nd.wp.y, nd.wp.z], i*3); nca.set([...C, a*quiet*gv], i*4);
+  });
+  nodeGeo.attributes.position.needsUpdate = true; nodeGeo.attributes.color.needsUpdate = true;
+  nodes.material.size = 0.12 + 0.07*voidK;
+}
+
+/* ═════════════ memory: a structure you can keep, undo and send ═════════════ */
+function encode(){
+  const bytes = [1, bpm, mode === 'tutti' ? 0 : 1];
+  for(const p of pages) for(const n of p.notes.values())
+    bytes.push((p.id << 5) | (n.staff << 2) | (n.sharp ? 2 : 0), n.step, n.k + 4);
+  let bin = ''; for(const b of bytes) bin += String.fromCharCode(b);
+  return 'OV1.' + btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function decode(code){
+  code = (code || '').trim();
+  if(!code.startsWith('OV1.')) return null;
+  try{
+    let b64 = code.slice(4).replace(/-/g,'+').replace(/_/g,'/'); while(b64.length % 4) b64 += '=';
+    const bin = atob(b64), by = [...bin].map(c => c.charCodeAt(0));
+    if(by[0] !== 1 || (by.length - 3) % 3) return null;
+    const out = { bpm: Math.max(36, Math.min(160, by[1] || 80)), mode: by[2] ? 'lettura' : 'tutti', pages: pages.map(() => []) };
+    for(let i=3;i<by.length;i+=3){
+      const pid = by[i] >> 5, staff = (by[i] >> 2) & 7, sharp = !!(by[i] & 2), step = by[i+1], k = by[i+2] - 4;
+      const pg = pages[pid]; if(!pg || staff >= pg.staves.length || step >= STEPS || k < -4 || k > 12) continue;
+      out.pages[pid].push({staff, step, k, sharp});
+    }
+    return out;
+  } catch(e){ return null; }
+}
+function applyState(st, animate){
+  pages.forEach((p, i) => {
+    const want = new Map(st.pages[i].map(n => [keyOf(n), n]));
+    for(const [key, n] of [...p.notes]) { if(!want.has(key)) p.notes.delete(key); else n.sharp = want.get(key).sharp; }
+    for(const [key, n] of want) if(!p.notes.has(key)) p.notes.set(key, {...n});
+    drawPage(p); syncLife(p, animate);
+  });
+  notesDirty = true; graphDirty = true;
+}
+const undoStack = [], redoStack = [];
+function remember(){ undoStack.push(encode()); if(undoStack.length > 150) undoStack.shift(); redoStack.length = 0; }
+function persist(){ try{ localStorage.setItem('opus.void.draft', encode()); } catch(e){} }
+function undo(){
+  if(!undoStack.length){ toast('nothing to undo'); return; }
+  redoStack.push(encode()); applyState(decode(undoStack.pop()), true); persist(); toast('undone');
+}
+function redo(){
+  if(!redoStack.length) return;
+  undoStack.push(encode()); applyState(decode(redoStack.pop()), true); persist(); toast('redone');
+}
+function openCode(code){
+  const st = decode(code);
+  if(!st){ toast('that code could not be read'); return false; }
+  remember();
+  applyState(st, true);
+  bpm = st.bpm; bpmIn.value = bpm; bpmV.textContent = bpm;
+  if(st.mode !== mode){ mode = st.mode; modeBtn.textContent = mode; modeBtn.classList.toggle('on', mode === 'lettura'); }
+  persist(); toast('opened');
+  return true;
+}
+let toastTimer = null;
+function toast(msg){
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ═════════════ seed ═════════════ */
+function seed(){
+  const PENT = [28,29,30,32,33,35,36,37,39,40];
+  const ROOTS = [21, 19, 23, 18];
+  for(const p of pages){
+    p.notes.clear();
+    if(Math.random() < 0.08){ drawPage(p); syncLife(p, false); continue; }
+    const dens = (0.06 + Math.random()*0.07) * (1 - p.entropy*0.5);
+    for(const s of p.staves){
+      if(s.clef === 'treble'){
+        let idx = Math.floor(Math.random()*PENT.length);
+        for(let st=0; st<STEPS; st++){
+          if(Math.random() > dens) continue;
+          idx = Math.max(0, Math.min(PENT.length-1, idx + [-2,-1,-1,0,1,1,2][Math.floor(Math.random()*7)]));
+          const n = {staff:s.idx, step:st, k:PENT[idx]-30, sharp:false}; p.notes.set(keyOf(n), n);
+        }
+      } else if(p.entropy < 0.5){
+        for(let m=0;m<4;m++){
+          if(Math.random() < 0.45){ const n = {staff:s.idx, step:m*8, k:ROOTS[m]-18, sharp:false}; p.notes.set(keyOf(n), n); }
+          if(Math.random() < 0.15){ const n = {staff:s.idx, step:m*8+4, k:ROOTS[m]+4-18, sharp:false}; p.notes.set(keyOf(n), n); }
+        }
+      }
+    }
+    drawPage(p); syncLife(p, true);
+    for(const n of p.notes.values()) if(n._life) n._life.userData.born = nowT + 0.3 + Math.random()*2.2;   // they arrive one by one
+  }
+  notesDirty = true; graphDirty = true;
+  persist();
+}
+
+/* ═════════════ focus ═════════════ */
+let focused = null, tween = null;
+const focusbar = document.getElementById('focusbar'), ftitle = document.getElementById('ftitle');
+function tweenTo(pos, target, dur=1.4){ tween = { p0:camera.position.clone(), t0:controls.target.clone(), p1:pos, t1:target, start:nowT, dur }; }
+let restY = 0, poseB = 0;
+function focusPage(p){
+  if(!focused) restY = Math.round(flowT*0.11 / (Math.PI/2)) * (Math.PI/2);   // the cube settles square to you
+  focused = p;
+  const m = new THREE.Matrix4().makeRotationY(restY);
+  const c = p.mesh.position.clone().applyMatrix4(m);
+  const nrm = new THREE.Vector3(0,0,1).applyQuaternion(p.mesh.quaternion).applyMatrix4(m).normalize();
+  const half = THREE.MathUtils.degToRad(camera.fov/2);
+  const d = Math.max((p.wh/2*1.28) / Math.tan(half), (p.ww/2*1.2) / (Math.tan(half)*camera.aspect));
+  const pos = c.clone().addScaledVector(nrm, d);
+  if(Math.abs(nrm.y) > 0.9) pos.z += 0.05 * d;
+  tweenTo(pos, c, 1.6);
+  ftitle.textContent = `${p.face} — ${p.mat}`; focusbar.classList.add('show'); document.body.classList.add('focused');
+}
+function unfocus(){
+  focused = null; focusbar.classList.remove('show'); document.body.classList.remove('focused');
+  const h = homeView(); tweenTo(h.pos, h.target, 1.8);
+}
+let lastSide = 0;
+function neighbor(p, dir){
+  if(p.id < 4) lastSide = p.id;
+  if(p.id >= 4){ if((p.id === 4 && dir === 'down') || (p.id === 5 && dir === 'up')) return pages[lastSide]; return p; }
+  if(dir === 'right') return pages[(p.id+1)%4];
+  if(dir === 'left')  return pages[(p.id+3)%4];
+  return dir === 'up' ? pages[4] : pages[5];
+}
+document.getElementById('overview').onclick = unfocus;
+
+/* ═════════════ input ═════════════ */
+const el = renderer.domElement;
+let down = null, dragging = false;
+el.addEventListener('pointerenter', () => { mouseIn = true; });
+el.addEventListener('pointerleave', () => { mouseIn = false; mouseDirty = true; });
+el.addEventListener('pointermove', e => {
+  mouseIn = true; mouseClient = {x:e.clientX, y:e.clientY}; mouseDirty = true;
+  if(down && Math.hypot(e.clientX-down.x, e.clientY-down.y) > 6){ dragging = true; stage.classList.add('grab'); }
+});
+el.addEventListener('pointerdown', e => { down = {x:e.clientX, y:e.clientY}; dragging = false; });
+el.addEventListener('pointerup', e => {
+  const wasDrag = dragging; dragging = false; stage.classList.remove('grab');
+  if(!down) return; const d = down; down = null;
+  if(wasDrag || Math.hypot(e.clientX-d.x, e.clientY-d.y) > 6 || e.button !== 0) return;
+  const h = pick(e.clientX, e.clientY);
+  if(h && h.loc){
+    ensureAudio();                                   // wake audio inside the gesture
+    clearTimeout(clickTimer);
+    const shift = e.shiftKey;
+    // wait a breath: if a second click follows, this was a double-click, not a note
+    clickTimer = setTimeout(() => { clickTimer = null; remember(); toggleNote(h.p, h.loc, shift); persist(); }, 230);
+  }
+  mouseDirty = true;
+});
+let clickTimer = null;
+el.addEventListener('dblclick', e => {
+  clearTimeout(clickTimer); clickTimer = null;
+  const h = pick(e.clientX, e.clientY); if(h) focusPage(h.p);
+});
+addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z')){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if((e.metaKey || e.ctrlKey) && (e.key === 'y' || e.key === 'Y')){ e.preventDefault(); redo(); return; }
+  if(e.metaKey || e.ctrlKey) return;
+  if(e.key === 'Escape' && sheet.classList.contains('show')){ sheet.classList.remove('show'); return; }
+  if(e.code === 'Space'){ e.preventDefault(); playing ? stop() : play(); }
+  else if(e.key === 'Escape' && focused) unfocus();
+  else if(e.key === 'v' || e.key === 'V') toggleVoid();
+  else if(focused && e.key.startsWith('Arrow')){ e.preventDefault(); focusPage(neighbor(focused, e.key.slice(5).toLowerCase())); }
+});
+// the interface recedes while the piece plays
+let idleTimer = null;
+function wake(){ document.body.classList.remove('idle'); clearTimeout(idleTimer); idleTimer = setTimeout(() => { if(playing) document.body.classList.add('idle'); }, 3500); }
+addEventListener('pointermove', wake); addEventListener('keydown', wake);
+
+/* ═════════════ ui ═════════════ */
+const playBtn = document.getElementById('play');
+function setPlayBtn(){ playBtn.textContent = playing ? 'stop' : 'play'; wake(); }
+playBtn.onclick = () => playing ? stop() : play();
+document.getElementById('clear').onclick = () => {
+  if(!pages.some(p => p.notes.size)) return;
+  remember();
+  pages.forEach(p => { p.notes.clear(); drawPage(p); syncLife(p, false); });
+  notesDirty = true; graphDirty = true; graphVisible = false; setGraphBtn();
+  persist(); toast(`cleared · ${navigator.platform.includes('Mac') ? '⌘' : 'ctrl '}Z to undo`);
+};
+document.getElementById('seed').onclick = () => { remember(); seed(); };
+// share sheet
+const sheet = document.getElementById('sheet'), codeEl = document.getElementById('code'), pasteEl = document.getElementById('paste');
+document.getElementById('share').onclick = () => { codeEl.textContent = encode(); pasteEl.value = ''; sheet.classList.add('show'); };
+document.getElementById('sclose').onclick = () => sheet.classList.remove('show');
+sheet.addEventListener('pointerdown', e => { if(e.target === sheet) sheet.classList.remove('show'); });
+document.getElementById('copy').onclick = async () => {
+  try{ await navigator.clipboard.writeText(codeEl.textContent); toast('copied — send it to anyone'); }
+  catch(e){ const r = document.createRange(); r.selectNodeContents(codeEl); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('selected — copy it by hand'); }
+};
+document.getElementById('sopen').onclick = () => { if(openCode(pasteEl.value)) sheet.classList.remove('show'); };
+addEventListener('paste', e => {
+  if(e.target === pasteEl) return;
+  const t = (e.clipboardData && e.clipboardData.getData('text')) || '';
+  if(t.trim().startsWith('OV1.')){ e.preventDefault(); openCode(t); sheet.classList.remove('show'); }
+});
+const bpmIn = document.getElementById('bpm'), bpmV = document.getElementById('bpmv');
+bpmIn.oninput = () => { bpm = +bpmIn.value; bpmV.textContent = bpm; };
+bpmIn.onchange = persist;
+let rotating = true;
+const rotBtn = document.getElementById('rot');
+rotBtn.onclick = () => { rotating = !rotating; rotBtn.classList.toggle('on', rotating); rotBtn.textContent = rotating ? 'drift' : 'still'; };
+const modeBtn = document.getElementById('mode');
+modeBtn.title = 'tutti: every staff sounds at once / lettura: each face reads line by line, all faces together';
+modeBtn.onclick = () => {
+  mode = mode === 'tutti' ? 'lettura' : 'tutti'; modeBtn.textContent = mode;
+  modeBtn.classList.toggle('on', mode === 'lettura');
+  notesDirty = true; graphDirty = true; persist(); if(playing){ stop(); play(); }
+};
+const voidBtn = document.getElementById('void');
+function toggleVoid(){
+  voidOn = !voidOn; voidBtn.classList.toggle('on', voidOn);
+  document.body.classList.toggle('void', voidOn);
+  graphDirty = true;
+}
+voidBtn.onclick = toggleVoid;
+const graphBtn = document.getElementById('graph');
+function setGraphBtn(){ graphBtn.classList.toggle('on', graphVisible); }
+graphBtn.onclick = () => { graphVisible = !graphVisible; graphDirty = true; setGraphBtn(); };
+
+/* ═════════════ loop ═════════════ */
+let flowT = 0, flowK = 1;
+const _c = new THREE.Vector3(), _n = new THREE.Vector3(), _q = new THREE.Quaternion();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  nowT += dt;
+
+  const target = (rotating && !focused && !tween && !(hover && hover.loc)) ? 1 : 0;
+  flowK += (target - flowK) * Math.min(1, dt * 1.6);
+  flowT += dt * flowK;
+  poseB += ((focused ? 1 : 0) - poseB) * Math.min(1, dt * 2.4);
+  const fy = flowT * 0.11, ib = 1 - poseB;
+  cube.rotation.set(Math.sin(flowT * 0.16) * 0.16 * ib, fy + (restY - fy) * poseB, Math.sin(flowT * 0.12 + 1.3) * 0.08 * ib);
+  cube.position.y = Math.sin(flowT * 0.33) * 0.25 * ib;
+  cube.updateMatrix();
+  fragments.forEach(m => {
+    const u = m.userData; u.ang += u.sp * dt; m.rotation.y += u.rs * dt * 0.3;
+    m.position.set(Math.cos(u.ang)*u.rad, u.y + Math.sin(nowT*0.3 + u.ph)*0.4, Math.sin(u.ang)*u.rad);
+  });
+  dustSeed.forEach((d, i) => {
+    d.y += d.v * dt; if(d.y > 17) d.y = 4.5;
+    const a = d.a + nowT*0.02;
+    dustPos[i*3] = Math.cos(a)*d.rad; dustPos[i*3+1] = d.y; dustPos[i*3+2] = Math.sin(a)*d.rad;
+  });
+  dust.geometry.attributes.position.needsUpdate = true;
+
+  if(tween){
+    const t = Math.min(1, (nowT - tween.start) / tween.dur);
+    const e = t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2;
+    camera.position.lerpVectors(tween.p0, tween.p1, e);
+    controls.target.lerpVectors(tween.t0, tween.t1, e);
+    if(t >= 1) tween = null;
+  }
+  controls.update();
+
+  // the void: darkness falls, the score vanishes, only the notes remain
+  voidK += ((voidOn ? 1 : 0) - voidK) * Math.min(1, dt * 1.4);
+  if(Math.abs(voidK - (voidOn ? 1 : 0)) < 0.001) voidK = voidOn ? 1 : 0;
+  if(Math.abs(voidK - lastVoidK) > 0.0005 || voidK === 0 && lastVoidK !== 0){
+    lastVoidK = voidK;
+    bg.lerpColors(WHITE, DARK, voidK);
+    renderer.setClearColor(bg, 1); scene.fog.color.copy(bg);
+    inkC.lerpColors(INKC, LIGHT, voidK);
+    for(const st of strings) st.line.material.color.copy(inkC);
+    for(const h of halos) h.m.material.color.copy(inkC);
+    for(const m of living) m.material.color.copy(inkC);
+    for(const b of birds) b.m.material.color.copy(inkC);
+    ghost.material.color.copy(inkC);
+    fadeLineMat.opacity = 1 - voidK;
+    fragments.forEach(m => m.material.opacity = m.userData.op * (1 - voidK));
+    dust.material.opacity = 0.4 * (1 - voidK);
+  }
+  const pageK = 1 - voidK;
+  // line hierarchy: the face that turns toward you is inked; oblique faces recede
+  for(const p of pages){
+    p.mesh.getWorldPosition(_c); p.mesh.getWorldQuaternion(_q);
+    _n.set(0,0,1).applyQuaternion(_q);
+    const facing = _n.dot(_c.sub(camera.position).normalize().negate());
+    const fo = 0.38 + 0.62 * Math.pow(Math.max(0, facing), 0.6);
+    p.fo = (p.fo ?? fo) + (fo - (p.fo ?? fo)) * 0.15;
+    p.mesh.material.opacity = p.fo * pageK;
+    p.back.material.opacity = (0.1 + 0.08 * Math.max(0, -facing)) * pageK;
+    p.facing = facing;
+    const want = voidK > 0.05 && ((hover && hover.p === p) || focused === p) ? 0.3 : 0;
+    p.revealK += (want - p.revealK) * Math.min(1, dt * (want > p.revealK ? 3 : 1.2));
+    p.reveal.material.uniforms.opacity.value = p.revealK * voidK;
+    p.reveal.visible = p.revealK * voidK > 0.003;
+  }
+
+  if(actx) while(events.length && events[0].time <= actx.currentTime) onStepVisual(events.shift());
+  updatePlayheads();
+  updateStrings();
+  if(mouseDirty || flowK > 0.001 || tween){ updateHover(); mouseDirty = false; }
+  updateGraph();
+  updateLife();
+  updateBirds(dt);
+  renderer.render(scene, camera);
+}
+addEventListener('resize', () => {
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+/* ═════════════ boot ═════════════ */
+(async () => {
+  drawAll();
+  try {
+    await Promise.race([
+      Promise.all([
+        document.fonts.load(`40px "Noto Music"`, '\u{1D11E}\u{1D122}\u{1D134}'),
+        document.fonts.load(`30px "Homemade Apple"`),
+        document.fonts.load(`italic 500 34px "Cormorant Garamond"`),
+        document.fonts.load(`italic 400 30px "Cormorant Garamond"`),
+        document.fonts.load(`400 22px "Cormorant Garamond"`),
+      ]),
+      new Promise(r => setTimeout(r, 3000))
+    ]);
+  } catch(e){}
+  let draft = null; try{ draft = localStorage.getItem('opus.void.draft'); } catch(e){}
+  const st = draft && decode(draft);
+  if(st){   // a returning visitor finds the structure as they left it — even an empty one
+    applyState(st, true);
+    for(const p of pages) for(const n of p.notes.values()) if(n._life) n._life.userData.born = nowT + 0.3 + Math.random()*2.2;
+    bpm = st.bpm; bpmIn.value = bpm; bpmV.textContent = bpm;
+    if(st.mode !== mode){ mode = st.mode; modeBtn.textContent = mode; modeBtn.classList.toggle('on', mode === 'lettura'); }
+  } else seed();
+  drawAll();
+  document.getElementById('veil').classList.add('gone');
+  document.fonts.ready.then(drawAll);
+})();
+animate();
+</script>
+</body>
+</html>
