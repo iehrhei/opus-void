@@ -4,15 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OPUS.VOID — floating structures of sound</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Homemade+Apple&family=Noto+Music&display=swap" rel="stylesheet">
+<link href="fonts/fonts.css" rel="stylesheet">
+<meta name="description" content="A cube of hand-inked staves you can write on and listen to. Six faces, six materials of sound. An Ouvroir de Rhei experiment.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="OPUS.VOID — floating structures of sound">
+<meta property="og:description" content="A cube of hand-inked staves you can write on and listen to. 一座可以被聆听的建筑。">
+<meta property="og:url" content="https://iehrhei.github.io/opus-void/">
+<meta property="og:image" content="https://iehrhei.github.io/opus-void/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://iehrhei.github.io/opus-void/og.jpg">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script src="lib/qrcode.js"></script>
 <style>
   :root{
     --ink:#161616;
     --mute:rgba(22,22,22,.46);
     --hair:rgba(22,22,22,.16);
-    --serif:"Cormorant Garamond","Times New Roman",serif;
+    --serif:"Cormorant Garamond","OV Song","Songti SC","STSong","Noto Serif SC",serif;
+    --hand:"Homemade Apple","LXGW WenKai","Kaiti SC","STKaiti",cursive;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:#fff;color:var(--ink);overflow:hidden;font-family:var(--serif);-webkit-font-smoothing:antialiased}
@@ -35,7 +46,7 @@
 
   header{position:fixed;left:52px;top:42px;pointer-events:none;user-select:none;z-index:3}
   h1{font-weight:400;font-size:46px;letter-spacing:.02em;margin:0;line-height:1}
-  .sub{font-family:"Homemade Apple",cursive;font-size:13px;color:var(--mute);margin:14px 0 0 2px;transform:rotate(-3deg);transform-origin:left center;white-space:nowrap}
+  .sub{font-family:var(--hand);font-size:13px;color:var(--mute);margin:14px 0 0 2px;transform:rotate(-3deg);transform-origin:left center;white-space:nowrap}
 
   .actions{position:fixed;right:52px;top:46px;display:flex;align-items:baseline;gap:30px;z-index:5}
   .word{font:500 12px var(--serif);letter-spacing:.32em;text-transform:uppercase;background:none;border:0;padding:4px 0;color:var(--mute);cursor:pointer;position:relative;transition:color .4s}
@@ -59,12 +70,47 @@
   .hint{position:fixed;right:52px;bottom:42px;text-align:right;font:italic 400 14px/1.85 var(--serif);color:var(--mute);pointer-events:none;user-select:none;z-index:3}
   .hint b{font-style:normal;font-weight:500;color:var(--ink)}
 
+  html[lang=zh] .sub{font-size:16px;letter-spacing:.12em;transform:rotate(-2deg)}
+  html[lang=zh] .word{font-size:13px;letter-spacing:.24em}
+  html[lang=zh] #play{font-size:27px;letter-spacing:.1em;font-style:normal}
+  html[lang=zh] .panel{font-size:12px;letter-spacing:.2em}
+  html[lang=zh] .hint{font-style:normal;font-size:13.5px;letter-spacing:.04em}
+  #lang{letter-spacing:.12em}
+  .mark{margin:20px 0 0 2px;font:italic 400 12px var(--serif);letter-spacing:.12em;color:var(--mute);white-space:nowrap}
+  .mark i{font-style:normal;font-variant:small-caps;letter-spacing:.2em;color:var(--ink);opacity:.75}
+  html[lang=zh] .mark{font-style:normal;letter-spacing:.2em}
+  /* invitation: what a friend sees first */
+  .invite{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity 1.2s}
+  body.void .invite{background:rgba(6,6,6,.84)}
+  .invite.show{opacity:1;pointer-events:auto}
+  .invite .card{max-width:min(560px,84vw);text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px}
+  .invite .k{font:500 11px var(--serif);letter-spacing:.42em;text-transform:uppercase;color:var(--mute)}
+  .invite .ti{font:34px/1.4 var(--hand);color:var(--ink);transform:rotate(-2deg);margin:6px 0}
+  .invite .fr{font:italic 400 19px var(--serif);color:var(--ink);letter-spacing:.02em}
+  .invite .ms{font:italic 400 17px/1.7 var(--serif);color:var(--mute);max-width:440px}
+  .invite .go{margin-top:18px;font:italic 400 30px var(--serif);background:none;border:0;color:var(--ink);cursor:pointer;padding:6px 18px;border-bottom:1px solid var(--hair);transition:border-color .5s}
+  .invite .go:hover{border-color:var(--ink)}
+  .invite .ow{margin-top:34px;font:italic 400 12px var(--serif);letter-spacing:.16em;color:var(--mute)}
+  html[lang=zh] .invite .fr,html[lang=zh] .invite .ms,html[lang=zh] .invite .go{font-style:normal}
+  html[lang=zh] .invite .k{letter-spacing:.5em}
+  /* share sheet */
+  .sheet label{display:flex;flex-direction:column;gap:6px;font:500 10.5px var(--serif);letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+  .sheet input{font:400 19px var(--serif);color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--hair);outline:none;padding:4px 0;letter-spacing:.02em}
+  .sheet input:focus{border-bottom-color:var(--ink)}
+  .sheet input::placeholder{color:var(--hair);font-style:italic}
+  .sheet .head{font:italic 400 24px var(--serif);color:var(--ink);margin-bottom:4px}
+  .sheet .tiny{font:italic 400 12px var(--serif);color:var(--mute);letter-spacing:.03em}
+  .sheet .posterbox{display:none;flex-direction:column;align-items:center;gap:10px}
+  .sheet .posterbox.show{display:flex}
+  .sheet .posterbox img{width:min(270px,60vw);box-shadow:0 0 0 1px var(--hair);display:block}
+  .sheet .lp{font:italic 400 12px var(--serif);color:var(--mute)}
+  .sheet .inner{max-height:92vh;overflow:auto;padding:4px 2px}
   #toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,8px);font:italic 400 15px var(--serif);letter-spacing:.04em;color:var(--mute);opacity:0;transition:opacity .5s,transform .5s;pointer-events:none;z-index:9}
   #toast.show{opacity:1;transform:translate(-50%,0)}
   .sheet{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .5s;z-index:12}
   body.void .sheet{background:rgba(6,6,6,.72)}
   .sheet.show{opacity:1;pointer-events:auto}
-  .sheet .inner{width:min(520px,86vw);display:flex;flex-direction:column;gap:16px}
+  .sheet .inner{width:min(460px,88vw);display:flex;flex-direction:column;gap:18px}
   .sheet .t{font:italic 400 18px var(--serif);color:var(--mute)}
   .sheet .code{font:400 12px/1.6 ui-monospace,Menlo,monospace;color:var(--ink);word-break:break-all;max-height:30vh;overflow:auto;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);padding:14px 0;user-select:all}
   .sheet textarea{font:400 12px/1.6 ui-monospace,Menlo,monospace;color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--hair);resize:none;height:64px;outline:none;padding:6px 0}
@@ -82,9 +128,9 @@
 
   @media (max-width:900px){
     header{left:22px;top:24px} h1{font-size:30px} .sub{font-size:10px;margin-top:8px}
-    .actions{right:22px;top:24px;gap:18px} #play{font-size:24px}
+    .actions{right:22px;left:22px;top:auto;bottom:100px;gap:0;justify-content:space-between;align-items:baseline} #play{font-size:24px}
     .panel{left:22px;right:22px;bottom:20px;gap:14px;flex-wrap:wrap} input[type=range]{width:90px}
-    .hint{display:none}
+    .hint{display:none} .mark{margin-top:12px;font-size:10.5px}
     .focusbar{top:auto;bottom:70px}
   }
 </style>
@@ -92,62 +138,77 @@
 <body>
 <div id="stage"></div>
 <div class="grain"></div>
-<div class="veil" id="veil">tuning the void</div>
+<div class="veil" id="veil" data-i="veil">tuning the void</div>
 
 <header class="ui">
   <h1>OPUS.VOID</h1>
-  <div class="sub">floating structures of sound</div>
+  <div class="sub" data-i="sub">floating structures of sound</div>
+  <div class="mark" id="mark"></div>
 </header>
 
 <nav class="actions ui">
-  <button class="word" id="seed">seed</button>
-  <button class="word" id="clear">clear</button>
-  <button class="word" id="share">share</button>
+  <button class="word" id="lang" title="English / 中文">中</button>
+  <button class="word" id="seed" data-i="seed">seed</button>
+  <button class="word" id="clear" data-i="clear">clear</button>
+  <button class="word" id="share" data-i="share">share</button>
   <button class="word" id="play">play</button>
 </nav>
 
 <div class="panel ui">
-  <div class="tempo"><span>tempo</span><input type="range" id="bpm" min="36" max="160" value="80"><b id="bpmv">80</b></div>
+  <div class="tempo"><span data-i="tempo">tempo</span><input type="range" id="bpm" min="36" max="160" value="80"><b id="bpmv">80</b></div>
   <span class="dot"></span>
   <button class="toggle on" id="rot">drift</button>
   <span class="dot"></span>
-  <button class="toggle" id="mode">tutti</button>
+  <button class="toggle" id="mode">together</button>
   <span class="dot"></span>
-  <button class="toggle" id="graph">traces</button>
+  <button class="toggle" id="graph" data-i="traces">traces</button>
   <span class="dot"></span>
-  <button class="toggle" id="void">void</button>
+  <button class="toggle" id="void" data-i="void">void</button>
 </div>
 
-<div class="hint ui">
-  six faces, six materials — pure · glass · droplet · breath · distance · felt<br>
-  <b>click</b> a staff to ink a note · click again to erase · <b>shift</b> for sharp<br>
-  <b>double-click</b> a face to write up close · drag to orbit · scroll to approach<br>
-  <b>space</b> to play · <b>V</b> to enter the void · <b>⌘Z</b> to undo
-</div>
-
+<div class="hint ui" id="hint"></div>
 <div class="focusbar" id="focusbar">
   <span class="t" id="ftitle">—</span>
-  <span class="k">← → around　↑ sky　↓ ground　esc back</span>
-  <button class="word" id="overview">overview</button>
+  <span class="k" data-i="focusKeys">← → around　↑ sky　↓ ground　esc back</span>
+  <button class="word" id="overview" data-i="overview">overview</button>
 </div>
 
 <div id="tip"></div>
 <div id="toast"></div>
 <div class="sheet" id="sheet">
   <div class="inner">
-    <div class="t">this structure, as a code</div>
-    <div class="code" id="code"></div>
-    <div class="row"><button class="word" id="copy">copy</button></div>
-    <div class="t">or open one you were sent</div>
-    <textarea id="paste" spellcheck="false" placeholder="paste a code — or press ⌘V anywhere on the page"></textarea>
-    <div class="row"><button class="word" id="sopen">open</button><button class="word" id="sclose">close</button></div>
+    <div class="head" data-i="sheetHead">send this structure</div>
+    <label><span data-i="fTitle">title</span><input id="f-title" maxlength="40" autocomplete="off" data-ph="fTitlePh"></label>
+    <label><span data-i="fName">your name</span><input id="f-name" maxlength="30" autocomplete="off" data-ph="fNamePh"></label>
+    <label><span data-i="fMsg">a line for them</span><input id="f-msg" maxlength="80" autocomplete="off" data-ph="fMsgPh"></label>
+    <div class="row" style="justify-content:flex-start;flex-wrap:wrap;gap:22px;margin:6px 0 0">
+      <button class="word" id="copylink" data-i="copyLink">copy link</button>
+      <button class="word" id="native" data-i="native" style="display:none">share…</button>
+      <button class="word" id="mkposter" data-i="poster">make a poster</button>
+    </div>
+    <div class="posterbox" id="posterbox">
+      <img id="posterImg" alt="">
+      <div class="row" style="justify-content:center;gap:22px;margin:0"><span class="lp" data-i="longpress">press and hold to save</span><button class="word" id="saveposter" data-i="save">save image</button></div>
+    </div>
+    <div class="tiny" data-i="pasteHint">received an older OV1 code? paste it anywhere on the page.</div>
+    <div class="row"><button class="word" id="sclose" data-i="close">close</button></div>
+  </div>
+</div>
+<div class="invite" id="invite">
+  <div class="card">
+    <div class="k" data-i="kicker">a structure of sound</div>
+    <div class="ti" id="i-title"></div>
+    <div class="fr" id="i-from"></div>
+    <div class="ms" id="i-msg"></div>
+    <button class="go" id="i-go" data-i="listen">listen</button>
+    <div class="ow" id="i-ow"></div>
   </div>
 </div>
 
 <script type="importmap">
 { "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  "three": "./lib/three.module.js",
+  "three/addons/": "./lib/addons/"
 }}
 </script>
 <script type="module">
@@ -160,7 +221,7 @@ const LS = 18, PXU = 160;
 const W = 10;
 const STEPS = 32;
 const MUSIC = '"Noto Music","Bravura","Apple Symbols","Segoe UI Symbol",serif';
-const SERIF = '"Cormorant Garamond","Times New Roman","Songti SC","Noto Serif SC",serif';
+const SERIF = '"Cormorant Garamond","OV Song","Songti SC","STSong","Noto Serif SC","Times New Roman",serif';
 const DEG = [0,2,4,5,7,9,11], NAMES = 'CDEFGAB';
 // six faces, six materials of sound
 const FACES = [
@@ -192,7 +253,7 @@ controls.enableDamping = true; controls.dampingFactor = 0.06;
 controls.zoomToCursor = true; controls.minDistance = 3; controls.maxDistance = 140; controls.rotateSpeed = 0.5;
 
 function homeView(){
-  const a = innerWidth/innerHeight, d = 40 * Math.max(1, 1.15/a);
+  const a = innerWidth/innerHeight, d = 40 * Math.max(1, 0.66/a);
   return { pos: new THREE.Vector3(0.62, 0.42, 0.66).normalize().multiplyScalar(d), target: new THREE.Vector3(0, 0.6, 0) };
 }
 { const h = homeView(); camera.position.copy(h.pos); controls.target.copy(h.target); }
@@ -219,7 +280,7 @@ function makeLayout(p){
 function createPage(id, fc){
   const ww = W, wh = W, systems = 3;
   const p = { id, fc, mat:fc.mat, face:fc.name, e0:fc.e0, e1:fc.e1, entropy:(fc.e0+fc.e1)/2, ww, wh, w:Math.round(ww*PXU), h:Math.round(wh*PXU),
-              systems, title:fc.mat, marking:MARKINGS[(id*5) % MARKINGS.length], no:id+1, notes:new Map() };
+              systems, title:fc.mat, faceName:fc.name, mi:(id*5) % MARKINGS.length, marking:MARKINGS[(id*5) % MARKINGS.length], no:id+1, notes:new Map() };
   makeLayout(p);
   // a few staff lines that run past the page edge, out into the void
   p.ext = [];
@@ -314,7 +375,7 @@ function fitGlyph(c, ch, family, x, top, height){
   c.fillText(ch, x + (m2.actualBoundingBoxLeft||0), top + m2.actualBoundingBoxAscent);
 }
 /* ── the hand: every line is inked, never ruled ── */
-const HAND = '"Homemade Apple", cursive';
+const HAND = '"Homemade Apple","LXGW WenKai","Kaiti SC","STKaiti",cursive';
 function hash(str){ let h = 2166136261; for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 // a pen stroke: gentle wander, pressure that swells and lifts, tapered ends
 function inkLine(c, x0, y0, x1, y1, w, r, wob=1){
@@ -379,7 +440,7 @@ function drawPage(p){
   c.globalAlpha = 0.62; c.font = `22px ${HAND}`; c.textAlign = 'left'; c.fillText(p.marking, 0, 0); c.restore();
   c.globalAlpha = 0.42; c.font = `18px ${HAND}`;
   c.textAlign = 'right'; c.fillText(String(p.no), p.X1, p.h - 46);
-  c.textAlign = 'left'; c.fillText(p.face, p.X0 - 30, p.h - 46);
+  c.textAlign = 'left'; c.fillText(p.faceName, p.X0 - 30, p.h - 46);
   c.globalAlpha = 1;
 
   const extSet = new Set(p.ext.map(x => `${x.staff}|${x.line}|${x.dir}`));
@@ -809,7 +870,7 @@ function updateHover(){
     ghost.rotation.set(0, 0, 0);
     ghost.visible = true;
     const ex = p.notes.get(keyOf(loc));
-    tip.innerHTML = `${nameOf(p, ex || loc)}<small>${ex ? 'erase' : p.mat}</small>`;
+    tip.innerHTML = `${nameOf(p, ex || loc)}<small>${ex ? T().erase : T().mats[p.mat]}</small>`;
     tip.style.left = mouseClient.x + 'px'; tip.style.top = mouseClient.y + 'px'; tip.style.opacity = 1;
   } else { ghost.visible = false; tip.style.opacity = 0; }
 }
@@ -1003,23 +1064,26 @@ function applyState(st, animate){
 }
 const undoStack = [], redoStack = [];
 function remember(){ undoStack.push(encode()); if(undoStack.length > 150) undoStack.shift(); redoStack.length = 0; }
-function persist(){ try{ localStorage.setItem('opus.void.draft', encode()); } catch(e){} }
+function persist(){
+  if(received){ received = false; try{ history.replaceState(null, '', location.pathname + location.search); } catch(e){} }
+  try{ localStorage.setItem('opus.void.draft', encode()); } catch(e){}
+}
 function undo(){
-  if(!undoStack.length){ toast('nothing to undo'); return; }
-  redoStack.push(encode()); applyState(decode(undoStack.pop()), true); persist(); toast('undone');
+  if(!undoStack.length){ toast(T().t.nothing); return; }
+  redoStack.push(encode()); applyState(decode(undoStack.pop()), true); persist(); toast(T().t.undone);
 }
 function redo(){
   if(!redoStack.length) return;
-  undoStack.push(encode()); applyState(decode(redoStack.pop()), true); persist(); toast('redone');
+  undoStack.push(encode()); applyState(decode(redoStack.pop()), true); persist(); toast(T().t.redone);
 }
 function openCode(code){
   const st = decode(code);
-  if(!st){ toast('that code could not be read'); return false; }
+  if(!st){ toast(T().t.bad); return false; }
   remember();
   applyState(st, true);
   bpm = st.bpm; bpmIn.value = bpm; bpmV.textContent = bpm;
-  if(st.mode !== mode){ mode = st.mode; modeBtn.textContent = mode; modeBtn.classList.toggle('on', mode === 'lettura'); }
-  persist(); toast('opened');
+  if(st.mode !== mode){ mode = st.mode; setModeBtn(); }
+  persist(); toast(T().t.opened);
   return true;
 }
 let toastTimer = null;
@@ -1074,7 +1138,7 @@ function focusPage(p){
   const pos = c.clone().addScaledVector(nrm, d);
   if(Math.abs(nrm.y) > 0.9) pos.z += 0.05 * d;
   tweenTo(pos, c, 1.6);
-  ftitle.textContent = `${p.face} — ${p.mat}`; focusbar.classList.add('show'); document.body.classList.add('focused');
+  ftitle.textContent = `${T().faces[p.face]} — ${T().mats[p.mat]}`; focusbar.classList.add('show'); document.body.classList.add('focused');
 }
 function unfocus(){
   focused = null; focusbar.classList.remove('show'); document.body.classList.remove('focused');
@@ -1135,44 +1199,280 @@ let idleTimer = null;
 function wake(){ document.body.classList.remove('idle'); clearTimeout(idleTimer); idleTimer = setTimeout(() => { if(playing) document.body.classList.add('idle'); }, 3500); }
 addEventListener('pointermove', wake); addEventListener('keydown', wake);
 
+
+/* ═════════════ language ═════════════ */
+const I18N = {
+  en: {
+    sub:'floating structures of sound', veil:'tuning the void',
+    seed:'seed', clear:'clear', share:'share', play:'play', stop:'stop', tempo:'tempo',
+    drift:'drift', still:'still', together:'together', inturn:'in turn', traces:'traces', void:'void',
+    modeTitle:'together: every staff sounds at once · in turn: each face reads line by line',
+    hint:'six faces, six materials — pure · glass · droplet · breath · distance · felt<br><b>click</b> a staff to ink a note · click again to erase · <b>shift</b> for sharp<br><b>double-click</b> a face to write up close · drag to orbit · scroll to approach<br><b>space</b> to play · <b>V</b> to enter the void · <b>⌘Z</b> to undo',
+    mark:'an <i>Ouvroir de Rhei</i> experiment',
+    focusKeys:'← → around　↑ sky　↓ ground　esc back', overview:'overview', erase:'erase',
+    mats:{pure:'pure', glass:'glass', droplet:'droplet', breath:'breath', distance:'distance', felt:'felt'},
+    faces:{north:'north', east:'east', south:'south', west:'west', sky:'sky', ground:'ground'},
+    markings:['gently','slowly','sustained','softly','as if breathing','from afar','tenderly','with stillness','lightly','dissolving','held','quietly','clear'],
+    sheetHead:'send this structure', fTitle:'title', fTitlePh:'untitled', fName:'your name', fNamePh:'signed by', fMsg:'a line for them', fMsgPh:'optional',
+    copyLink:'copy link', native:'share…', poster:'make a poster', save:'save image', longpress:'or press and hold the image', close:'close',
+    pasteHint:'received a link or an older OV1 code? paste it anywhere on the page.',
+    kicker:'a structure of sound', listen:'listen', untitled:'untitled',
+    from: a => a ? `${a} built you a structure of sound` : 'someone built you a structure of sound',
+    shareText: m => m.author ? `${m.author} built you a structure of sound — OPUS.VOID` : 'A structure of sound — OPUS.VOID',
+    scan:'scan to listen', by: a => `by ${a}`, owMark:'an Ouvroir de Rhei experiment',
+    t:{ undone:'undone', redone:'redone', nothing:'nothing to undo', cleared:k => `cleared · ${k}Z to undo`, copied:'link copied — send it to someone', opened:'opened', bad:'that link could not be read' },
+  },
+  zh: {
+    sub:'一座可以被聆听的建筑', veil:'调音中',
+    seed:'撒种', clear:'清空', share:'分享', play:'演奏', stop:'停止', tempo:'速度',
+    drift:'漂移', still:'静止', together:'齐奏', inturn:'轮奏', traces:'光迹', void:'虚空',
+    modeTitle:'齐奏：所有谱表同时奏响 · 轮奏：每一面逐行读谱，六面同时进行',
+    hint:'六面，六种声音的材质 —— 纯音 · 玻璃 · 水滴 · 气息 · 远方 · 毡<br><b>点击</b>谱线落下音符 · 再点一次抹去 · <b>Shift</b> 升半音<br><b>双击</b>一面近距离书写 · 拖动环视 · 滚轮推近<br><b>空格</b>演奏 · <b>V</b> 进入虚空 · <b>⌘Z</b> 撤销',
+    mark:'<i>Ouvroir de Rhei</i> 的一项实验',
+    focusKeys:'← → 四周　↑ 天　↓ 地　esc 返回', overview:'全景', erase:'抹去',
+    mats:{pure:'纯音', glass:'玻璃', droplet:'水滴', breath:'气息', distance:'远方', felt:'毡'},
+    faces:{north:'北', east:'东', south:'南', west:'西', sky:'天', ground:'地'},
+    markings:['轻轻地','缓慢地','持续着','柔和地','如呼吸','自远方','温柔地','于静止中','轻盈地','渐渐消散','保持','安静地','清澈'],
+    sheetHead:'送出这座声音建筑', fTitle:'作品名', fTitlePh:'无题', fName:'你的署名', fNamePh:'署名', fMsg:'写给对方的一句话', fMsgPh:'可不填',
+    copyLink:'复制链接', native:'分享…', poster:'生成海报', save:'保存图片', longpress:'或长按图片保存', close:'关闭',
+    pasteHint:'收到链接或旧版 OV1 代码？在页面任意处粘贴即可打开。',
+    kicker:'一座声音建筑', listen:'聆听', untitled:'无题',
+    from: a => a ? `${a} 为你搭了一座声音建筑` : '有人为你搭了一座声音建筑',
+    shareText: m => m.author ? `${m.author} 为你搭了一座声音建筑 —— OPUS.VOID` : '一座可以被聆听的建筑 —— OPUS.VOID',
+    scan:'扫码聆听', by: a => `${a}`, owMark:'Ouvroir de Rhei 的一项实验',
+    t:{ undone:'已撤销', redone:'已重做', nothing:'没有可以撤销的了', cleared:k => `已清空 · ${k}Z 撤销`, copied:'链接已复制，发给一个人吧', opened:'已打开', bad:'这个链接无法读取' },
+  },
+};
+const ZH_GLYPHS = '纯音玻璃水滴气息远方毡北东南西天地轻缓慢持续柔和如呼吸自温于静止中盈渐消散保安清澈一座可以被聆听的建筑';
+let lang = (() => {
+  try{ const l = localStorage.getItem('opus.void.lang'); if(l) return l; } catch(e){}
+  return /^zh/i.test(navigator.language || '') ? 'zh' : 'en';
+})();
+const T = () => I18N[lang];
+function applyLang(l, save){
+  lang = l; if(save){ try{ localStorage.setItem('opus.void.lang', l); } catch(e){} }
+  document.documentElement.lang = l === 'zh' ? 'zh' : 'en';
+  document.querySelectorAll('[data-i]').forEach(el => { const v = T()[el.dataset.i]; if(typeof v === 'string') el.textContent = v; });
+  document.querySelectorAll('[data-ph]').forEach(el => { el.placeholder = T()[el.dataset.ph]; });
+  document.getElementById('hint').innerHTML = T().hint;
+  document.getElementById('mark').innerHTML = T().mark;
+  document.getElementById('lang').textContent = l === 'zh' ? 'EN' : '中';
+  for(const p of pages){ p.title = T().mats[p.mat]; p.faceName = T().faces[p.face]; p.marking = T().markings[p.mi]; }
+  if(typeof setPlayBtn === 'function'){ setPlayBtn(); setModeBtn(); rotBtn.textContent = rotating ? T().drift : T().still; }
+  if(focused) ftitle.textContent = `${T().faces[focused.face]} — ${T().mats[focused.mat]}`;
+  if(sharedMeta) fillInvite(sharedMeta);
+  drawAll();
+}
+
+/* ═════════════ sharing: a link that carries the whole structure ═════════════ */
+const HOME = 'https://iehrhei.github.io/opus-void/';
+let received = false, sharedMeta = null;
+const enc = new TextEncoder(), dec = new TextDecoder();
+const clipBytes = (str, max) => { let b = enc.encode(str || ''); while(b.length > max){ str = [...str].slice(0, -1).join(''); b = enc.encode(str); } return b; };
+const b64u = u8 => { let s = ''; for(let i=0;i<u8.length;i+=0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i+0x8000)); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); };
+const unb64u = s => { s = s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length % 4) s += '='; const b = atob(s); const u = new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i] = b.charCodeAt(i); return u; };
+async function pipe(u8, stream){ const cs = new Blob([u8]).stream().pipeThrough(stream); return new Uint8Array(await new Response(cs).arrayBuffer()); }
+function packV2(m){
+  const out = [bpm, (mode === 'lettura' ? 1 : 0) | (voidOn ? 2 : 0) | (lang === 'zh' ? 4 : 0)];
+  for(const [str, max] of [[m.title, 120], [m.author, 90], [m.msg, 240]]){ const b = clipBytes(str, max); out.push(b.length, ...b); }
+  const notes = []; for(const p of pages) for(const n of p.notes.values()) notes.push((p.id << 5) | (n.staff << 2) | (n.sharp ? 2 : 0), n.step, n.k + 4);
+  out.push((notes.length/3) >> 8, (notes.length/3) & 255, ...notes);
+  return new Uint8Array(out);
+}
+async function shareURL(m){
+  const raw = packV2(m);
+  let body = raw, flag = 0;
+  try{ if(window.CompressionStream){ const c = await pipe(raw, new CompressionStream('deflate-raw')); if(c.length < raw.length){ body = c; flag = 1; } } } catch(e){}
+  const u = new Uint8Array(body.length + 1); u[0] = flag; u.set(body, 1);
+  return HOME + '#v2.' + b64u(u);
+}
+async function readShared(hash){
+  try{
+    const u = unb64u(hash.slice(hash.indexOf('#v2.') + 4));
+    let body = u.subarray(1);
+    if(u[0] & 1) body = await pipe(body, new DecompressionStream('deflate-raw'));
+    let i = 0; const rd = () => body[i++];
+    const out = { bpm: Math.max(36, Math.min(160, rd() || 80)) }; const fl = rd();
+    out.mode = fl & 1 ? 'lettura' : 'tutti'; out.void = !!(fl & 2); out.lang = fl & 4 ? 'zh' : 'en';
+    for(const k of ['title','author','msg']){ const L = rd(); out[k] = dec.decode(body.subarray(i, i + L)); i += L; }
+    const count = (rd() << 8) | rd();
+    out.pages = pages.map(() => []);
+    for(let j=0;j<count;j++){
+      const a = rd(), step = rd(), k = rd() - 4, pid = a >> 5, staff = (a >> 2) & 7, sharp = !!(a & 2);
+      const pg = pages[pid]; if(!pg || staff >= pg.staves.length || step >= STEPS || k < -4 || k > 12) continue;
+      out.pages[pid].push({staff, step, k, sharp});
+    }
+    return out;
+  } catch(e){ return null; }
+}
+const inv = document.getElementById('invite');
+function fillInvite(m){
+  document.getElementById('i-title').textContent = m.title || T().untitled;
+  document.getElementById('i-from').textContent = T().from(m.author);
+  const ms = document.getElementById('i-msg'); ms.textContent = m.msg ? `“${m.msg}”` : ''; ms.style.display = m.msg ? '' : 'none';
+  document.getElementById('i-ow').textContent = 'OPUS.VOID · ' + T().owMark;
+}
+async function openShared(hash){
+  const m = await readShared(hash);
+  if(!m){ toast(T().t.bad); return; }
+  let saved = null; try{ saved = localStorage.getItem('opus.void.lang'); } catch(e){}
+  if(!saved && m.lang !== lang) applyLang(m.lang, false);
+  if(undoStack.length || pages.some(p => p.notes.size)) remember();
+  applyState(m, true);
+  bpm = m.bpm; bpmIn.value = bpm; bpmV.textContent = bpm;
+  if(m.mode !== mode){ mode = m.mode; setModeBtn(); }
+  if(m.void !== voidOn) toggleVoid();
+  if(playing) stop();
+  received = true; sharedMeta = m;
+  if(m.title) fT.value = m.title;
+  fillInvite(m); inv.classList.add('show');
+}
+document.getElementById('i-go').onclick = () => {
+  ensureAudio(); inv.classList.remove('show');
+  setTimeout(() => { if(!playing) play(); }, 900);
+};
+
+/* ═════════════ poster: an image that travels where links cannot ═════════════ */
+function wrapLines(c, text, maxW, maxLines){
+  const words = /[一-鿿]/.test(text) ? [...text] : text.split(/(\s+)/);
+  const lines = []; let cur = '';
+  for(const w of words){ const t = cur + w; if(c.measureText(t).width > maxW && cur.trim()){ lines.push(cur.trim()); cur = w.trimStart(); } else cur = t; }
+  if(cur.trim()) lines.push(cur.trim());
+  if(lines.length > maxLines){ lines.length = maxLines; lines[maxLines-1] = lines[maxLines-1].replace(/.$/, '…'); }
+  return lines;
+}
+async function makePoster(m, url){
+  const W = 1080, H = 1440, dark = voidOn;
+  const BG = dark ? '#060606' : '#ffffff', FG = dark ? '#eeece6' : '#161616', MU = dark ? 'rgba(238,236,230,.5)' : 'rgba(22,22,22,.5)';
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  c.fillStyle = BG; c.fillRect(0, 0, W, H);
+  // the structure, rendered fresh at poster size
+  const S = 980;
+  const r2 = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true});
+  r2.setPixelRatio(1); r2.setSize(S, S, false); r2.outputColorSpace = THREE.SRGBColorSpace;
+  r2.setClearColor(dark ? DARK : WHITE, 1);
+  const cam = camera.clone(); cam.aspect = 1;
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  cam.position.copy(controls.target).addScaledVector(dir, 33); cam.lookAt(controls.target); cam.updateProjectionMatrix();
+  const gv = ghost.visible; ghost.visible = false;
+  const fogN = scene.fog.near, fogF = scene.fog.far; scene.fog.near = 40; scene.fog.far = 90;
+  r2.render(scene, cam);
+  c.drawImage(r2.domElement, (W - S)/2, 118, S, S);
+  scene.fog.near = fogN; scene.fog.far = fogF; ghost.visible = gv;
+  r2.dispose(); r2.forceContextLoss();
+  // type
+  c.fillStyle = FG; c.textBaseline = 'alphabetic';
+  c.font = `400 34px ${SERIF}`; c.textAlign = 'left';
+  try{ c.letterSpacing = '6px'; } catch(e){}
+  c.fillText('OPUS.VOID', 72, 88);
+  try{ c.letterSpacing = '0px'; } catch(e){}
+  const d = new Date(), months = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+  c.fillStyle = MU; c.font = `italic 400 24px ${SERIF}`; c.textAlign = 'right';
+  c.fillText(lang === 'zh' ? `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}` : `${d.getDate()} · ${months[d.getMonth()]} · ${d.getFullYear()}`, W - 72, 88);
+  // title, signature, message
+  const QR = 196, qx = W - 72 - QR, qy = H - 72 - QR - 34;
+  const maxW = qx - 72 - 40;
+  c.textAlign = 'left'; c.fillStyle = FG;
+  c.save(); c.translate(72, 1172); c.rotate(-0.02);
+  c.font = `${lang === 'zh' ? 52 : 40}px ${HAND}`;
+  c.fillText(wrapLines(c, m.title || T().untitled, maxW, 1)[0], 0, 0); c.restore();
+  let y = 1236;
+  if(m.author){ c.font = `italic 400 30px ${SERIF}`; c.fillText(T().by(m.author), 74, y); y += 46; }
+  if(m.msg){
+    c.fillStyle = MU; c.font = `italic 400 25px ${SERIF}`;
+    for(const ln of wrapLines(c, `“${m.msg}”`, maxW, 2)){ c.fillText(ln, 74, y); y += 36; }
+  }
+  // the mark
+  c.fillStyle = MU; c.font = `italic 400 19px ${SERIF}`;
+  c.fillText(T().owMark, 74, H - 74);
+  c.font = `400 17px ${SERIF}`; try{ c.letterSpacing = '2px'; } catch(e){}
+  c.fillText('iehrhei.github.io/opus-void', 74, H - 104);
+  try{ c.letterSpacing = '0px'; } catch(e){}
+  // QR — always dark on light, so every scanner reads it
+  if(window.qrcode){
+    const q = qrcode(0, 'L'); q.addData(url); q.make();
+    const n = q.getModuleCount(), pad = 12, cell = (QR - pad*2) / n;
+    c.fillStyle = dark ? '#eeece6' : '#ffffff'; c.fillRect(qx, qy, QR, QR);
+    c.fillStyle = '#161616';
+    for(let r=0;r<n;r++) for(let k=0;k<n;k++) if(q.isDark(r, k)) c.fillRect(qx + pad + k*cell, qy + pad + r*cell, Math.ceil(cell), Math.ceil(cell));
+    c.fillStyle = MU; c.font = `${lang === 'zh' ? 'normal' : 'italic'} 400 19px ${SERIF}`; c.textAlign = 'center';
+    c.fillText(T().scan, qx + QR/2, qy + QR + 30);
+  }
+  return await new Promise(res => cv.toBlob(res, 'image/jpeg', 0.92));
+}
+
 /* ═════════════ ui ═════════════ */
 const playBtn = document.getElementById('play');
-function setPlayBtn(){ playBtn.textContent = playing ? 'stop' : 'play'; wake(); }
+function setPlayBtn(){ playBtn.textContent = playing ? T().stop : T().play; wake(); }
 playBtn.onclick = () => playing ? stop() : play();
 document.getElementById('clear').onclick = () => {
   if(!pages.some(p => p.notes.size)) return;
   remember();
   pages.forEach(p => { p.notes.clear(); drawPage(p); syncLife(p, false); });
   notesDirty = true; graphDirty = true; graphVisible = false; setGraphBtn();
-  persist(); toast(`cleared · ${navigator.platform.includes('Mac') ? '⌘' : 'ctrl '}Z to undo`);
+  persist(); toast(T().t.cleared(/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+'));
 };
 document.getElementById('seed').onclick = () => { remember(); seed(); };
 // share sheet
-const sheet = document.getElementById('sheet'), codeEl = document.getElementById('code'), pasteEl = document.getElementById('paste');
-document.getElementById('share').onclick = () => { codeEl.textContent = encode(); pasteEl.value = ''; sheet.classList.add('show'); };
+const sheet = document.getElementById('sheet');
+const fT = document.getElementById('f-title'), fN = document.getElementById('f-name'), fM = document.getElementById('f-msg');
+const posterbox = document.getElementById('posterbox'), posterImg = document.getElementById('posterImg');
+let posterBlob = null;
+try{ fN.value = localStorage.getItem('opus.void.name') || ''; fT.value = localStorage.getItem('opus.void.title') || ''; } catch(e){}
+const meta = () => ({ title: fT.value.trim(), author: fN.value.trim(), msg: fM.value.trim() });
+[fT, fN].forEach(el => el.addEventListener('change', () => { try{ localStorage.setItem('opus.void.name', fN.value.trim()); localStorage.setItem('opus.void.title', fT.value.trim()); } catch(e){} }));
+[fT, fN, fM].forEach(el => el.addEventListener('input', () => { posterbox.classList.remove('show'); posterBlob = null; }));
+document.getElementById('share').onclick = () => { posterbox.classList.remove('show'); posterBlob = null; sheet.classList.add('show'); };
 document.getElementById('sclose').onclick = () => sheet.classList.remove('show');
 sheet.addEventListener('pointerdown', e => { if(e.target === sheet) sheet.classList.remove('show'); });
-document.getElementById('copy').onclick = async () => {
-  try{ await navigator.clipboard.writeText(codeEl.textContent); toast('copied — send it to anyone'); }
-  catch(e){ const r = document.createRange(); r.selectNodeContents(codeEl); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('selected — copy it by hand'); }
+document.getElementById('copylink').onclick = async () => {
+  const url = await shareURL(meta());
+  try{ await navigator.clipboard.writeText(url); toast(T().t.copied); }
+  catch(e){ window.prompt ? toast(url) : toast(url); }
 };
-document.getElementById('sopen').onclick = () => { if(openCode(pasteEl.value)) sheet.classList.remove('show'); };
+const nativeBtn = document.getElementById('native');
+if(navigator.share) nativeBtn.style.display = '';
+nativeBtn.onclick = async () => {
+  const m = meta(), url = await shareURL(m);
+  const data = { title: m.title || 'OPUS.VOID', text: T().shareText(m), url };
+  try{
+    if(posterBlob){
+      const file = new File([posterBlob], 'opus-void.jpg', {type:'image/jpeg'});
+      if(navigator.canShare && navigator.canShare({files:[file]})) data.files = [file];
+    }
+    await navigator.share(data);
+  } catch(e){}
+};
+document.getElementById('mkposter').onclick = async () => {
+  const url = await shareURL(meta());
+  posterBlob = await makePoster(meta(), url);
+  if(!posterBlob) return;
+  posterImg.src = URL.createObjectURL(posterBlob);
+  posterbox.classList.add('show');
+};
+document.getElementById('saveposter').onclick = () => {
+  if(!posterBlob) return;
+  const a = document.createElement('a'); a.href = posterImg.src;
+  a.download = `opus-void${fT.value.trim() ? '-' + fT.value.trim().replace(/[^\w\u4e00-\u9fff-]+/g,'-') : ''}.jpg`;
+  document.body.appendChild(a); a.click(); a.remove();
+};
 addEventListener('paste', e => {
-  if(e.target === pasteEl) return;
-  const t = (e.clipboardData && e.clipboardData.getData('text')) || '';
-  if(t.trim().startsWith('OV1.')){ e.preventDefault(); openCode(t); sheet.classList.remove('show'); }
+  if(e.target.tagName === 'INPUT') return;
+  const t = ((e.clipboardData && e.clipboardData.getData('text')) || '').trim();
+  if(t.startsWith('OV1.')){ e.preventDefault(); openCode(t); sheet.classList.remove('show'); }
+  else if(t.includes('#v2.')){ e.preventDefault(); openShared(t.slice(t.indexOf('#v2.'))); sheet.classList.remove('show'); }
 });
 const bpmIn = document.getElementById('bpm'), bpmV = document.getElementById('bpmv');
 bpmIn.oninput = () => { bpm = +bpmIn.value; bpmV.textContent = bpm; };
 bpmIn.onchange = persist;
 let rotating = true;
 const rotBtn = document.getElementById('rot');
-rotBtn.onclick = () => { rotating = !rotating; rotBtn.classList.toggle('on', rotating); rotBtn.textContent = rotating ? 'drift' : 'still'; };
+rotBtn.onclick = () => { rotating = !rotating; rotBtn.classList.toggle('on', rotating); rotBtn.textContent = rotating ? T().drift : T().still; };
 const modeBtn = document.getElementById('mode');
-modeBtn.title = 'tutti: every staff sounds at once / lettura: each face reads line by line, all faces together';
+function setModeBtn(){ modeBtn.textContent = mode === 'tutti' ? T().together : T().inturn; modeBtn.classList.toggle('on', mode === 'lettura'); modeBtn.title = T().modeTitle; }
 modeBtn.onclick = () => {
-  mode = mode === 'tutti' ? 'lettura' : 'tutti'; modeBtn.textContent = mode;
-  modeBtn.classList.toggle('on', mode === 'lettura');
+  mode = mode === 'tutti' ? 'lettura' : 'tutti'; setModeBtn();
   notesDirty = true; graphDirty = true; persist(); if(playing){ stop(); play(); }
 };
 const voidBtn = document.getElementById('void');
@@ -1182,6 +1482,7 @@ function toggleVoid(){
   graphDirty = true;
 }
 voidBtn.onclick = toggleVoid;
+document.getElementById('lang').onclick = () => applyLang(lang === 'zh' ? 'en' : 'zh', true);
 const graphBtn = document.getElementById('graph');
 function setGraphBtn(){ graphBtn.classList.toggle('on', graphVisible); }
 graphBtn.onclick = () => { graphVisible = !graphVisible; graphDirty = true; setGraphBtn(); };
@@ -1221,6 +1522,7 @@ function animate(){
     if(t >= 1) tween = null;
   }
   controls.update();
+  { const dist = camera.position.distanceTo(controls.target); scene.fog.near = Math.max(16, dist - 14); scene.fog.far = dist + 34; }
 
   // the void: darkness falls, the score vanishes, only the notes remain
   voidK += ((voidOn ? 1 : 0) - voidK) * Math.min(1, dt * 1.4);
@@ -1272,12 +1574,14 @@ addEventListener('resize', () => {
 
 /* ═════════════ boot ═════════════ */
 (async () => {
-  drawAll();
+  applyLang(lang, false);
   try {
     await Promise.race([
       Promise.all([
         document.fonts.load(`40px "Noto Music"`, '\u{1D11E}\u{1D122}\u{1D134}'),
         document.fonts.load(`30px "Homemade Apple"`),
+        document.fonts.load(`30px "LXGW WenKai"`, ZH_GLYPHS),
+        document.fonts.load(`16px "OV Song"`, ZH_GLYPHS),
         document.fonts.load(`italic 500 34px "Cormorant Garamond"`),
         document.fonts.load(`italic 400 30px "Cormorant Garamond"`),
         document.fonts.load(`400 22px "Cormorant Garamond"`),
@@ -1291,11 +1595,12 @@ addEventListener('resize', () => {
     applyState(st, true);
     for(const p of pages) for(const n of p.notes.values()) if(n._life) n._life.userData.born = nowT + 0.3 + Math.random()*2.2;
     bpm = st.bpm; bpmIn.value = bpm; bpmV.textContent = bpm;
-    if(st.mode !== mode){ mode = st.mode; modeBtn.textContent = mode; modeBtn.classList.toggle('on', mode === 'lettura'); }
-  } else seed();
+    if(st.mode !== mode){ mode = st.mode; setModeBtn(); }
+  } else if(!location.hash.startsWith('#v2.')) seed();
   drawAll();
   document.getElementById('veil').classList.add('gone');
   document.fonts.ready.then(drawAll);
+  if(location.hash.startsWith('#v2.')) openShared(location.hash);
 })();
 animate();
 </script>

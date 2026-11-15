@@ -1,0 +1,14 @@
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300;font-display:swap;src:url(cormorant-garamond-latin-300-normal.woff2) format('woff2');}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:300;font-display:swap;src:url(cormorant-garamond-latin-300-italic.woff2) format('woff2');}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:400;font-display:swap;src:url(cormorant-garamond-latin-400-normal.woff2) format('woff2');}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:400;font-display:swap;src:url(cormorant-garamond-latin-400-italic.woff2) format('woff2');}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:500;font-display:swap;src:url(cormorant-garamond-latin-500-normal.woff2) format('woff2');}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:500;font-display:swap;src:url(cormorant-garamond-latin-500-italic.woff2) format('woff2');}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:600;font-display:swap;src:url(cormorant-garamond-latin-600-normal.woff2) format('woff2');}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:600;font-display:swap;src:url(cormorant-garamond-latin-600-italic.woff2) format('woff2');}
+@font-face{font-family:'Noto Music';font-weight:400;src:url(noto-music-music-400-normal.woff2) format('woff2');unicode-range:U+1D100-1D1FF,U+2669-266F;}
+@font-face{font-family:'Noto Music';font-weight:400;src:url(noto-music-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF;}
+@font-face{font-family:'Homemade Apple';font-weight:400;font-display:swap;src:url(homemade-apple-latin-400-normal.woff2) format('woff2');}
+/* Chinese faces, subset to the characters this site uses (Noto Serif SC & LXGW WenKai, SIL OFL) */
+@font-face{font-family:'OV Song';font-weight:400;font-display:swap;src:url(ov-song.woff2) format('woff2');}
+@font-face{font-family:'LXGW WenKai';font-weight:400;font-display:swap;src:url(ov-kai.woff2) format('woff2');}
