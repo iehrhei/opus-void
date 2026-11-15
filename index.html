@@ -674,7 +674,7 @@ function makeIR(ac, seconds){
   return ir;
 }
 function ensureAudio(){
-  if(actx){ if(actx.state === 'suspended') actx.resume(); return actx; }
+  if(actx){ if(actx.state !== 'running' && actx.state !== 'closed') actx.resume().catch(() => {}); return actx; }
   actx = new (window.AudioContext || window.webkitAudioContext)();
   const lim = actx.createDynamicsCompressor();
   lim.threshold.value = -8; lim.knee.value = 6; lim.ratio.value = 10; lim.attack.value = 0.003; lim.release.value = 0.25;
@@ -1198,6 +1198,39 @@ addEventListener('keydown', e => {
 let idleTimer = null;
 function wake(){ document.body.classList.remove('idle'); clearTimeout(idleTimer); idleTimer = setTimeout(() => { if(playing) document.body.classList.add('idle'); }, 3500); }
 addEventListener('pointermove', wake); addEventListener('keydown', wake);
+
+/* ═════════════ mobile audio ═════════════
+   iOS mutes Web Audio when the ring/silent switch is on, and suspends or
+   "interrupts" it after the page goes to the background. On the first touch we
+   ask for a playback audio session and hold it open with a silent <audio>
+   loop, and we wake the context again on every touch and on return. */
+let silentEl = null;
+function silentWavURL(){
+  const sr = 8000, n = sr / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, str) => { for(let i=0;i<str.length;i++) v.setUint8(o + i, str.charCodeAt(i)); };
+  w(0,'RIFF'); v.setUint32(4, 36 + n*2, true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sr,true); v.setUint32(28,sr*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true); w(36,'data'); v.setUint32(40,n*2,true);
+  return URL.createObjectURL(new Blob([buf], {type:'audio/wav'}));
+}
+function unlockAudio(){
+  try{ if(navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
+  ensureAudio();
+  if(!silentEl){
+    try{
+      silentEl = document.createElement('audio');
+      silentEl.src = silentWavURL(); silentEl.loop = true; silentEl.setAttribute('playsinline', ''); silentEl.volume = 0.01;
+      const pr = silentEl.play(); if(pr) pr.catch(() => { silentEl = null; });
+    } catch(e){ silentEl = null; }
+    // a single silent sample through the graph also unlocks older iOS
+    try{ const b = actx.createBuffer(1, 1, actx.sampleRate), s = actx.createBufferSource(); s.buffer = b; s.connect(actx.destination); s.start(0); } catch(e){}
+  }
+}
+['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => addEventListener(ev, unlockAudio, {capture:true, passive:true}));
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden){ if(silentEl) silentEl.pause(); return; }
+  if(actx && actx.state !== 'running') actx.resume().catch(() => {});
+  if(silentEl) silentEl.play().catch(() => {});
+});
 
 
 /* ═════════════ language ═════════════ */
