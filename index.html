@@ -76,11 +76,9 @@
   html[lang=zh] .panel{font-size:12px;letter-spacing:.2em}
   html[lang=zh] .hint{font-style:normal;font-size:13.5px;letter-spacing:.04em}
   #lang{letter-spacing:.12em}
-  /* the Ouvroir de Rhei wordmark, inked in whatever colour the page is written in */
-  .owlogo{display:inline-block;height:24px;aspect-ratio:2310/451;background:var(--ink);opacity:.5;vertical-align:middle;
-    -webkit-mask:url(img/ouvroir-mark.png) no-repeat left center/contain;mask:url(img/ouvroir-mark.png) no-repeat left center/contain;transition:background-color 1.4s, opacity .6s}
-  .mark{margin:18px 0 0 0;pointer-events:auto}
-  .mark .owlogo:hover{opacity:.8}
+  .mark{margin:20px 0 0 2px;font:italic 400 12px var(--serif);letter-spacing:.12em;color:var(--mute);white-space:nowrap}
+  .mark i{font-style:normal;font-variant:small-caps;letter-spacing:.2em;color:var(--ink);opacity:.75}
+  html[lang=zh] .mark{font-style:normal;letter-spacing:.2em}
   /* invitation: what a friend sees first */
   .invite{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity 1.2s}
   body.void .invite{background:rgba(6,6,6,.84)}
@@ -92,8 +90,7 @@
   .invite .ms{font:italic 400 17px/1.7 var(--serif);color:var(--mute);max-width:440px}
   .invite .go{margin-top:18px;font:italic 400 30px var(--serif);background:none;border:0;color:var(--ink);cursor:pointer;padding:6px 18px;border-bottom:1px solid var(--hair);transition:border-color .5s}
   .invite .go:hover{border-color:var(--ink)}
-  .invite .ow{margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:12px;font:400 11px var(--serif);letter-spacing:.42em;color:var(--mute)}
-  .invite .ow .owlogo{height:21px;opacity:.45}
+  .invite .ow{margin-top:34px;font:italic 400 12px var(--serif);letter-spacing:.16em;color:var(--mute)}
   html[lang=zh] .invite .fr,html[lang=zh] .invite .ms,html[lang=zh] .invite .go{font-style:normal}
   html[lang=zh] .invite .k{letter-spacing:.5em}
   /* share sheet */
@@ -133,7 +130,7 @@
     header{left:22px;top:24px} h1{font-size:30px} .sub{font-size:10px;margin-top:8px}
     .actions{right:22px;left:22px;top:auto;bottom:100px;gap:0;justify-content:space-between;align-items:baseline} #play{font-size:24px}
     .panel{left:22px;right:22px;bottom:20px;gap:14px;flex-wrap:wrap} input[type=range]{width:90px}
-    .hint{display:none} .mark{margin-top:10px} .mark .owlogo{height:19px}
+    .hint{display:none} .mark{margin-top:12px;font-size:10.5px}
     .focusbar{top:auto;bottom:70px}
   }
 </style>
@@ -146,7 +143,7 @@
 <header class="ui">
   <h1>OPUS.VOID</h1>
   <div class="sub" data-i="sub">floating structures of sound</div>
-  <div class="mark" id="mark"><span class="owlogo" role="img" aria-label="Ouvroir de Rhei" title="Ouvroir de Rhei"></span></div>
+  <div class="mark" id="mark"></div>
 </header>
 
 <nav class="actions ui">
@@ -204,7 +201,7 @@
     <div class="fr" id="i-from"></div>
     <div class="ms" id="i-msg"></div>
     <button class="go" id="i-go" data-i="listen">listen</button>
-    <div class="ow"><span>OPUS.VOID</span><span class="owlogo" role="img" aria-label="Ouvroir de Rhei"></span></div>
+    <div class="ow" id="i-ow"></div>
   </div>
 </div>
 
@@ -1258,7 +1255,7 @@ function applyLang(l, save){
   document.querySelectorAll('[data-i]').forEach(el => { const v = T()[el.dataset.i]; if(typeof v === 'string') el.textContent = v; });
   document.querySelectorAll('[data-ph]').forEach(el => { el.placeholder = T()[el.dataset.ph]; });
   document.getElementById('hint').innerHTML = T().hint;
-  document.querySelectorAll('.owlogo').forEach(el => el.title = T().owMark);
+  document.getElementById('mark').innerHTML = T().mark;
   document.getElementById('lang').textContent = l === 'zh' ? 'EN' : '中';
   for(const p of pages){ p.title = T().mats[p.mat]; p.faceName = T().faces[p.face]; p.marking = T().markings[p.mi]; }
   if(typeof setPlayBtn === 'function'){ setPlayBtn(); setModeBtn(); rotBtn.textContent = rotating ? T().drift : T().still; }
@@ -1312,6 +1309,7 @@ const inv = document.getElementById('invite');
 function fillInvite(m){
   document.getElementById('i-title').textContent = m.title || T().untitled;
   document.getElementById('i-from').textContent = T().from(m.author);
+  document.getElementById('i-ow').textContent = 'OPUS.VOID · ' + T().owMark;
   const ms = document.getElementById('i-msg'); ms.textContent = m.msg ? `“${m.msg}”` : ''; ms.style.display = m.msg ? '' : 'none';
 }
 async function openShared(hash){
