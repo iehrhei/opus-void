@@ -16,4 +16,8 @@ An interactive, hand-inked cube of musical staves. Each of its six faces is a fu
 
 An Ouvroir de Rhei experiment. Built with Three.js and the Web Audio API; no build step, no server.
 
-Fonts: Cormorant Garamond, Homemade Apple, Noto Music, Noto Serif SC and LXGW WenKai (subset), all under the SIL Open Font License. Three.js (MIT), qrcode-generator by Kazuhiko Arase (MIT).
+## License
+
+© 2026 Rhei Tan · Ouvroir de Rhei. Licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) — free to share and adapt for **non-commercial** purposes, with attribution, under the same license. For commercial use, please ask first. 本作品采用 CC BY-NC-SA 4.0 许可，禁止商业使用。
+
+Third-party fonts: Cormorant Garamond, Homemade Apple, Noto Music, Noto Serif SC and LXGW WenKai (subset), all under the SIL Open Font License. Three.js (MIT), qrcode-generator by Kazuhiko Arase (MIT).

@@ -16,6 +16,8 @@
 <meta name="twitter:image" content="https://iehrhei.github.io/opus-void/og.jpg">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+<meta name="author" content="Rhei Tan — Ouvroir de Rhei">
 <script src="lib/qrcode.js"></script>
 <style>
   :root{
@@ -79,6 +81,9 @@
   .mark{margin:20px 0 0 2px;font:italic 400 12px var(--serif);letter-spacing:.12em;color:var(--mute);white-space:nowrap}
   .mark i{font-style:normal;font-variant:small-caps;letter-spacing:.2em;color:var(--ink);opacity:.75}
   html[lang=zh] .mark{font-style:normal;letter-spacing:.2em}
+  .mark .cc{display:block;margin-top:6px;font:normal 400 10px var(--serif);letter-spacing:.14em;color:var(--mute);opacity:.75;pointer-events:auto}
+  .mark .cc a{color:inherit;text-decoration:none;border-bottom:1px solid var(--hair)}
+  .mark .cc a:hover{color:var(--ink)}
   /* invitation: what a friend sees first */
   .invite{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity 1.2s}
   body.void .invite{background:rgba(6,6,6,.84)}
@@ -1241,7 +1246,7 @@ const I18N = {
     drift:'drift', still:'still', together:'together', inturn:'in turn', traces:'traces', void:'void',
     modeTitle:'together: every staff sounds at once · in turn: each face reads line by line',
     hint:'six faces, six materials — pure · glass · droplet · breath · distance · felt<br><b>click</b> a staff to ink a note · click again to erase · <b>shift</b> for sharp<br><b>double-click</b> a face to write up close · drag to orbit · scroll to approach<br><b>space</b> to play · <b>V</b> to enter the void · <b>⌘Z</b> to undo',
-    mark:'an <i>Ouvroir de Rhei</i> experiment',
+    mark:'an <i>Ouvroir de Rhei</i> experiment<span class="cc">© 2026 Rhei Tan · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a></span>',
     focusKeys:'← → around　↑ sky　↓ ground　esc back', overview:'overview', erase:'erase',
     mats:{pure:'pure', glass:'glass', droplet:'droplet', breath:'breath', distance:'distance', felt:'felt'},
     faces:{north:'north', east:'east', south:'south', west:'west', sky:'sky', ground:'ground'},
@@ -1261,7 +1266,7 @@ const I18N = {
     drift:'漂移', still:'静止', together:'齐奏', inturn:'轮奏', traces:'光迹', void:'虚空',
     modeTitle:'齐奏：所有谱表同时奏响 · 轮奏：每一面逐行读谱，六面同时进行',
     hint:'六面，六种声音的材质 —— 纯音 · 玻璃 · 水滴 · 气息 · 远方 · 毡<br><b>点击</b>谱线落下音符 · 再点一次抹去 · <b>Shift</b> 升半音<br><b>双击</b>一面近距离书写 · 拖动环视 · 滚轮推近<br><b>空格</b>演奏 · <b>V</b> 进入虚空 · <b>⌘Z</b> 撤销',
-    mark:'<i>Ouvroir de Rhei</i> 的一项实验',
+    mark:'<i>Ouvroir de Rhei</i> 的一项实验<span class="cc">© 2026 Rhei Tan · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans" target="_blank" rel="license noopener">CC BY-NC-SA 4.0</a> · 非商业使用</span>',
     focusKeys:'← → 四周　↑ 天　↓ 地　esc 返回', overview:'全景', erase:'抹去',
     mats:{pure:'纯音', glass:'玻璃', droplet:'水滴', breath:'气息', distance:'远方', felt:'毡'},
     faces:{north:'北', east:'东', south:'南', west:'西', sky:'天', ground:'地'},
